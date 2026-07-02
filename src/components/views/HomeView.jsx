@@ -4,12 +4,16 @@ import Heatmap from './Heatmap';
 import NewTaskForm from './NewTaskForm';
 import UpcomingTasks from './UpcomingTasks';
 import DailyTasks from './DailyTasks';
+import useNotifications from '../../hooks/useNotifications';
 
 export default function HomeView({ user }) {
   const [xp, setXp] = useState(user?.xp || 0);
   const [level, setLevel] = useState(user?.level || 1);
   const [habits, setHabits] = useState([]);
   
+  // Start notification schedule watcher
+  useNotifications(habits);
+
   useEffect(() => {
     fetch('/api/habits')
       .then(res => res.json())

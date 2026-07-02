@@ -18,6 +18,21 @@ export default function Navbar({ currentView, setCurrentView, user, onLogout }) 
     ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() 
     : 'USR';
 
+  const [notificationPerm, setNotificationPerm] = useState('default');
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPerm(Notification.permission);
+    }
+  }, []);
+
+  const handleNotificationRequest = async () => {
+    if ("Notification" in window) {
+      const perm = await Notification.requestPermission();
+      setNotificationPerm(perm);
+    }
+  };
+
   return (
     <nav className="flex items-center justify-between mb-8 pb-4 border-b border-white/5 relative">
       {/* Brand Identity */}
@@ -44,8 +59,30 @@ export default function Navbar({ currentView, setCurrentView, user, onLogout }) 
       </div>
 
       {/* Structural Space for Future Features (Profile, Settings, Premium) */}
-      <div className="flex items-center gap-4 w-32 justify-end" ref={dropdownRef}>
-        <div className="relative">
+      <div className="flex items-center gap-4 justify-end" ref={dropdownRef}>
+        
+        {/* Notification Bell */}
+        <button 
+          onClick={handleNotificationRequest}
+          title={notificationPerm === 'granted' ? 'Notifications Enabled' : 'Enable Notifications'}
+          className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+            notificationPerm === 'granted' 
+              ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20' 
+              : 'bg-surface-800 border-white/10 text-gray-400 hover:bg-surface-700 hover:text-gray-200'
+          }`}
+        >
+          {notificationPerm === 'granted' ? (
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          )}
+        </button>
+
+        <div className="relative ml-2">
           <button 
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="w-10 h-10 rounded-full bg-surface-800 border border-white/10 flex items-center justify-center hover:bg-surface-700 hover:border-primary/50 transition-all focus:outline-none"
