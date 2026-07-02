@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 // Helper to generate a range of dates
 function getDatesInRange(startDate, endDate) {
