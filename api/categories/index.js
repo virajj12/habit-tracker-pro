@@ -1,17 +1,22 @@
 import dbConnect from '../_utils/dbConnect.js';
 import Category from '../_models/Category.js';
-import { authenticate } from '../_utils/auth.js';
+import jwt from 'jsonwebtoken';
+import * as cookie from 'cookie';
 
 export default async function handler(req, res) {
-  await dbConnect();
-  
-  // Authenticate user
-  const user = await authenticate(req);
-  if (!user) {
+  let userId;
+  try {
+    const cookies = cookie.parseCookie(req.headers.cookie || '');
+    const token = cookies.auth_token;
+    if (!token) throw new Error('Not authenticated');
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_antigravity');
+    userId = decoded.userId;
+  } catch (error) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
-  const userId = user._id;
+  await dbConnect();
 
   if (req.method === 'GET') {
     try {
