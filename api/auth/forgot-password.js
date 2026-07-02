@@ -46,13 +46,39 @@ export default async function handler(req, res) {
     const resetUrl = `${protocol}://${host}/?resetToken=${token}`;
 
     const mailOptions = {
-      from: `"Habit Tracker Pro" <${process.env.EMAIL_USER}>`,
+      from: `"Habit Tracker" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: 'Password Reset Request',
+      subject: 'Reset Your Password - Habit Tracker',
       text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n` +
         `Please click on the following link, or paste this into your browser to complete the process:\n\n` +
         `${resetUrl}\n\n` +
-        `If you did not request this, please ignore this email and your password will remain unchanged.\n`
+        `If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f1115; color: #ffffff; padding: 40px 20px; text-align: center;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #1a1d24; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.05);">
+            <h1 style="color: #ef4444; margin-bottom: 8px; font-size: 28px; font-weight: bold;">Habit Tracker</h1>
+            <p style="color: #9ca3af; font-size: 16px; margin-bottom: 32px;">Build unstoppable momentum.</p>
+            
+            <h2 style="font-size: 20px; margin-bottom: 16px; color: #ffffff;">Password Reset Request</h2>
+            <p style="color: #d1d5db; font-size: 16px; line-height: 1.5; margin-bottom: 32px; text-align: left;">
+              We received a request to reset the password for your account. Click the button below to choose a new password. This link will expire in 1 hour.
+            </p>
+            
+            <a href="${resetUrl}" style="display: inline-block; background-color: #ef4444; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: bold; font-size: 16px; margin-bottom: 32px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
+              Reset Password
+            </a>
+            
+            <p style="color: #9ca3af; font-size: 14px; line-height: 1.5; margin-bottom: 16px; text-align: left;">
+              If the button doesn't work, copy and paste this link into your browser:<br>
+              <a href="${resetUrl}" style="color: #ef4444; word-break: break-all;">${resetUrl}</a>
+            </p>
+            
+            <p style="color: #6b7280; font-size: 14px; text-align: left; margin-top: 32px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 16px;">
+              If you did not request a password reset, please safely ignore this email. Your password will remain unchanged.
+            </p>
+          </div>
+        </div>
+      `
     };
 
     await transporter.sendMail(mailOptions);
