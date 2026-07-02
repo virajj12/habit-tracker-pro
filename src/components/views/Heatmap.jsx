@@ -180,7 +180,7 @@ export default function Heatmap({ user }) {
 
       {/* Heatmap Grid Wrapper */}
       <div className="flex-grow flex items-center md:justify-center overflow-x-auto overflow-y-hidden pb-2 custom-scrollbar">
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 bg-surface-900/30 p-4 md:p-6 rounded-2xl border border-white/5 inline-flex w-max shadow-inner">
           {weeks.map((week, wIndex) => (
             <div key={wIndex} className="flex flex-col gap-1.5">
               {week.map((date, dIndex) => {
