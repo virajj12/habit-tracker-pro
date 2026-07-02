@@ -2,13 +2,7 @@ import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
 
 export default function DailyTasks({ onTaskComplete }) {
-  const [tasks, setTasks] = useState([
-    { id: 1, name: 'Drink Water (1L)', completed: false, dependsOn: null, type: 'positive' },
-    { id: 2, name: 'Morning Workout', completed: true, dependsOn: 1, type: 'positive' }, 
-    { id: 3, name: 'Read 10 pages', completed: false, dependsOn: null, type: 'positive' },
-    { id: 4, name: 'Check Emails', completed: false, dependsOn: 3, type: 'positive' },
-    { id: 5, name: 'Limit Screen Time', completed: false, dependsOn: null, type: 'negative' }
-  ]);
+  const [tasks, setTasks] = useState([]);
 
   const [frictionTask, setFrictionTask] = useState(null);
   const [countdown, setCountdown] = useState(10);

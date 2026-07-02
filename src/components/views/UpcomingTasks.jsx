@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
 
-// Using mock data designed around the current system time (approx 11:42 AM) for demonstration
-const mockAgenda = [
-  { id: 1, name: 'Morning Meditation', startTime: '08:00', endTime: '08:30' },
-  { id: 2, name: 'Deep Work Session', startTime: '10:00', endTime: '12:00' },
-  { id: 3, name: 'Lunch Walk', startTime: '12:30', endTime: '13:00' },
-  { id: 4, name: 'Read 10 pages', startTime: '20:00', endTime: '21:00' }
-];
-
 export default function UpcomingTasks() {
   const [currentTask, setCurrentTask] = useState(null);
   const [nextTask, setNextTask] = useState(null);
@@ -23,6 +15,7 @@ export default function UpcomingTasks() {
       let current = null;
       let upcoming = null;
 
+      const mockAgenda = []; // Fetch from API in the future
       for (const task of mockAgenda) {
         if (currentTimeStr >= task.startTime && currentTimeStr < task.endTime) {
           current = task;

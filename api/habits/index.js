@@ -1,14 +1,14 @@
 import dbConnect from '../_utils/dbConnect.js';
 import Habit from '../_models/Habit.js';
 import jwt from 'jsonwebtoken';
-import { parse } from 'cookie';
+import * as cookie from 'cookie';
 
 export default async function handler(req, res) {
   const { method } = req;
 
   let userId;
   try {
-    const cookies = parse(req.headers.cookie || '');
+    const cookies = cookie.parseCookie(req.headers.cookie || '');
     const token = cookies.auth_token;
     if (!token) throw new Error('Not authenticated');
     

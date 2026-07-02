@@ -1,3 +1,4 @@
+import * as cookie from 'cookie';
 import dbConnect from '../../_utils/dbConnect.js';
 import Habit from '../../_models/Habit.js';
 import HabitLog from '../../_models/HabitLog.js';
@@ -10,7 +11,7 @@ export default async function handler(req, res) {
 
   let userId;
   try {
-    const cookies = require('cookie').parse(req.headers.cookie || '');
+    const cookies = cookie.parseCookie(req.headers.cookie || '');
     const token = cookies.auth_token;
     if (!token) throw new Error('Not authenticated');
     

@@ -5,9 +5,9 @@ import NewTaskForm from './NewTaskForm';
 import UpcomingTasks from './UpcomingTasks';
 import DailyTasks from './DailyTasks';
 
-export default function HomeView() {
-  const [xp, setXp] = useState(740); // Mock starting XP
-  const [level, setLevel] = useState(7);
+export default function HomeView({ user }) {
+  const [xp, setXp] = useState(user?.xp || 0);
+  const [level, setLevel] = useState(user?.level || 1);
   
   const xpNextLevel = 100;
   const currentLevelXp = xp % xpNextLevel;
@@ -29,7 +29,7 @@ export default function HomeView() {
       {/* RPG Gamification & Velocity Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Hello, Pioneer!</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Hello, {user?.name || 'Pioneer'}!</h1>
           <div className="flex items-center gap-4">
             <div className="w-48 h-3 bg-surface-900 rounded-full overflow-hidden border border-white/5 relative">
               <div 
