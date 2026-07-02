@@ -96,11 +96,11 @@ export default function Heatmap({ user }) {
     const clickedDate = new Date(date);
     clickedDate.setHours(0,0,0,0);
 
-    const dateStr = date.toISOString().split('T')[0];
+    const clickedDateStr = new Date(date).toLocaleDateString('en-CA');
 
     // If past missed day, have tokens, not already used
     if (clickedDate < today && intensity === 0 && tokens > 0 && !isTokenUsed) {
-      setTargetDate(dateStr);
+      setTargetDate(clickedDateStr);
       setShowModal(true);
     }
   };
@@ -184,7 +184,8 @@ export default function Heatmap({ user }) {
           {weeks.map((week, wIndex) => (
             <div key={wIndex} className="flex flex-col gap-1.5">
               {week.map((date, dIndex) => {
-                const dateStr = date.toISOString().split('T')[0];
+                const dateObj = new Date(date);
+                const dateStr = dateObj.toLocaleDateString('en-CA');
                 const isTokenUsed = tokenDays.has(dateStr);
                 const intensity = habitLogs[dateStr] || 0;
                 // Only show blocks for dates strictly within our target range, 
