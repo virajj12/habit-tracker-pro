@@ -194,7 +194,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
             </div>
             
             {/* Action Buttons (Modify/Delete) */}
-            <div className={`flex gap-2 transition-opacity duration-300 ${task.completed || isLocked ? 'opacity-0 pointer-events-none' : 'opacity-0 group-hover:opacity-100'}`}>
+            <div className={`flex gap-2 transition-opacity duration-300 ${task.completed || isLocked ? 'opacity-0 pointer-events-none' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
               <button 
                 className="p-2 text-gray-400 bg-white/5 rounded-lg hover:bg-white/10 hover:text-white transition"
                 title="Modify Task"
