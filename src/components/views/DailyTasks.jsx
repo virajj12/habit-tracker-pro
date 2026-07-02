@@ -20,14 +20,19 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
     if (tasks.length === 0) return;
     const fetchLogs = async () => {
       try {
-        const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local time
-        const res = await fetch(`/api/habit-logs?dateString=${todayStr}`);
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const res = await fetch(`/api/habit-logs?dateString=${todayStr}&_t=${Date.now()}`, {
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        });
         const data = await res.json();
         if (data.success) {
-          const completedIds = data.data.map(log => log.habitId);
+          const completedIds = data.data
+            .filter(log => log.status === 'completed')
+            .map(log => String(log.habitId));
+            
           setTasks(prevTasks => prevTasks.map(t => ({
             ...t,
-            completed: completedIds.includes(t._id)
+            completed: completedIds.includes(String(t._id || t.id))
           })));
         }
       } catch (err) {
