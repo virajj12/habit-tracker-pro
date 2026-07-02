@@ -2,7 +2,7 @@ import dbConnect from '../_utils/dbConnect.js';
 import User from '../_models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { serialize } from 'cookie';
+import * as cookie from 'cookie';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       { expiresIn: '7d' }
     );
 
-    const serialized = serialize('auth_token', token, {
+    const serialized = cookie.serialize('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',

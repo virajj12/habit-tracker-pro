@@ -1,4 +1,4 @@
-import { serialize } from 'cookie';
+import * as cookie from 'cookie';
 
 export default function handler(req, res) {
   if (req.method !== 'POST') {
@@ -6,7 +6,7 @@ export default function handler(req, res) {
   }
 
   // Clear the cookie by setting maxAge to -1
-  const serialized = serialize('auth_token', '', {
+  const serialized = cookie.serialize('auth_token', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
