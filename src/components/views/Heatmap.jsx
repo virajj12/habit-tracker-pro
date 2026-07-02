@@ -18,26 +18,7 @@ function getDatesInRange(startDate, endDate) {
   return dates;
 }
 
-// Generate mock data intensity (0-4) for dates
-function generateMockData(dates) {
-  const data = {};
-  dates.forEach(date => {
-    const dateStr = date.toISOString().split('T')[0];
-    // Random intensity leaning towards 0 and 1, occasionally higher
-    const rand = Math.random();
-    let intensity = 0;
-    if (rand > 0.5) intensity = 1;
-    if (rand > 0.8) intensity = 2;
-    if (rand > 0.9) intensity = 3;
-    if (rand > 0.95) intensity = 4;
-    
-    // Future dates are 0
-    if (date > new Date()) intensity = 0;
-    
-    data[dateStr] = intensity;
-  });
-  return data;
-}
+
 
 export default function Heatmap() {
   const [rangeOption, setRangeOption] = useState('month');
@@ -68,7 +49,7 @@ export default function Heatmap() {
   }, [rangeOption]);
 
   const dates = useMemo(() => getDatesInRange(startDate, endDate), [startDate, endDate]);
-  const mockData = useMemo(() => generateMockData(dates), [dates]);
+  const habitLogs = useMemo(() => ({}), [dates]); // To be wired up to /api/habit-logs
 
   const getColorClass = (intensity, isTokenUsed) => {
     if (isTokenUsed) return 'bg-amber-400 border-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.6)] z-10';
@@ -159,7 +140,7 @@ export default function Heatmap() {
               {week.map((date, dIndex) => {
                 const dateStr = date.toISOString().split('T')[0];
                 const isTokenUsed = tokenDays.has(dateStr);
-                const intensity = mockData[dateStr] || 0;
+                const intensity = habitLogs[dateStr] || 0;
                 // Only show blocks for dates strictly within our target range, 
                 // but we might want to show them faded if they are padding days.
                 // For a cleaner look, let's render all days in the week columns.

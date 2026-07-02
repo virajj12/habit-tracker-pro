@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
 import Heatmap from './Heatmap';
 import NewTaskForm from './NewTaskForm';
@@ -8,6 +8,18 @@ import DailyTasks from './DailyTasks';
 export default function HomeView({ user }) {
   const [xp, setXp] = useState(user?.xp || 0);
   const [level, setLevel] = useState(user?.level || 1);
+  const [habits, setHabits] = useState([]);
+  
+  useEffect(() => {
+    fetch('/api/habits')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setHabits(data.data);
+        }
+      })
+      .catch(err => console.error("Error fetching habits:", err));
+  }, []);
   
   const xpNextLevel = 100;
   const currentLevelXp = xp % xpNextLevel;
@@ -75,7 +87,7 @@ export default function HomeView({ user }) {
       <UpcomingTasks />
 
       {/* Daily Tasks List (Bottom Full Width) */}
-      <DailyTasks onTaskComplete={handleTaskComplete} />
+      <DailyTasks tasks={habits} setTasks={setHabits} onTaskComplete={handleTaskComplete} />
 
       </div>
 

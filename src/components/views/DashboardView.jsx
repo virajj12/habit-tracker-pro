@@ -11,15 +11,15 @@ export default function DashboardView() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 bg-surface-900/40 rounded-xl border border-white/5">
             <div className="text-sm text-gray-400 mb-1">Completion Rate</div>
-            <div className="text-3xl font-bold text-primary">87%</div>
+            <div className="text-3xl font-bold text-primary">0%</div>
           </div>
           <div className="p-4 bg-surface-900/40 rounded-xl border border-white/5">
             <div className="text-sm text-gray-400 mb-1">Current Streak</div>
-            <div className="text-3xl font-bold text-secondary">14 Days</div>
+            <div className="text-3xl font-bold text-secondary">0 Days</div>
           </div>
           <div className="p-4 bg-surface-900/40 rounded-xl border border-white/5">
             <div className="text-sm text-gray-400 mb-1">Total Tasks Done</div>
-            <div className="text-3xl font-bold text-white">342</div>
+            <div className="text-3xl font-bold text-white">0</div>
           </div>
         </div>
       </GlassCard>

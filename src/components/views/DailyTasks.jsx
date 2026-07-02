@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
 
-export default function DailyTasks({ onTaskComplete }) {
-  const [tasks, setTasks] = useState([]);
+export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
 
   const [frictionTask, setFrictionTask] = useState(null);
   const [countdown, setCountdown] = useState(10);

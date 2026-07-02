@@ -6,19 +6,19 @@ export default function Navbar({ currentView, setCurrentView }) {
       {/* Brand Identity */}
       <div className="flex items-center gap-4">
         <div className="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary cursor-default">
-          ANTIGRAVITY
+          HABIT TRACKER
         </div>
       </div>
 
       {/* Primary Navigation */}
       <div className="flex items-center gap-8 bg-surface-900/50 px-6 py-2 rounded-full border border-white/5 backdrop-blur-sm">
-        <button 
+        <button
           onClick={() => setCurrentView('home')}
           className={`transition-colors font-medium ${currentView === 'home' ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
         >
           Home
         </button>
-        <button 
+        <button
           onClick={() => setCurrentView('dashboard')}
           className={`transition-colors font-medium ${currentView === 'dashboard' ? 'text-secondary' : 'text-gray-400 hover:text-gray-200'}`}
         >
