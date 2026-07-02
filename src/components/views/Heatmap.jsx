@@ -86,7 +86,7 @@ export default function Heatmap({ user }) {
       case 2: return 'bg-primary/60 border-primary/40';
       case 3: return 'bg-primary/80 border-primary/60';
       case 4: return 'bg-primary border-primary/80';
-      default: return 'bg-surface-800/50 border-white/5';
+      default: return 'bg-surface-950/60 border-white/5';
     }
   };
 
