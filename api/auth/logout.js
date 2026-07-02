@@ -6,7 +6,9 @@ export default function handler(req, res) {
   }
 
   // Clear the cookie by setting maxAge to -1
-  const serialized = cookie.serialize('auth_token', '', {
+  const serialized = cookie.stringifySetCookie({
+    name: 'auth_token',
+    value: '',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',

@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const cookies = cookie.parse(req.headers.cookie || '');
+    const cookies = cookie.parseCookie(req.headers.cookie || '');
     const token = cookies.auth_token;
 
     if (!token) {

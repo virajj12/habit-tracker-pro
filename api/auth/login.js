@@ -33,7 +33,9 @@ export default async function handler(req, res) {
       { expiresIn: '7d' }
     );
 
-    const serialized = cookie.serialize('auth_token', token, {
+    const serialized = cookie.stringifySetCookie({
+      name: 'auth_token',
+      value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
