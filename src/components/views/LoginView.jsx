@@ -137,7 +137,7 @@ export default function LoginView({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-bold py-3 rounded-xl transition-opacity mt-4 shadow-[0_0_15px_rgba(239,68,68,0.4)] ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-colors mt-4 shadow-[0_0_15px_rgba(239,68,68,0.4)] ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Launch Tracker')}
           </button>
