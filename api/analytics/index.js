@@ -1,5 +1,5 @@
-import dbConnect from '../../_utils/dbConnect.js';
-import HabitLog from '../../_models/HabitLog.js';
+import dbConnect from '../_utils/dbConnect.js';
+import HabitLog from '../_models/HabitLog.js';
 import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
 
