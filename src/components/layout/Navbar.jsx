@@ -34,25 +34,25 @@ export default function Navbar({ currentView, setCurrentView, user, onLogout }) 
   };
 
   return (
-    <nav className="flex items-center justify-between mb-8 pb-4 border-b border-white/5 relative">
+    <nav className="flex flex-wrap items-center justify-between gap-y-4 mb-4 md:mb-8 pb-4 border-b border-white/5 relative">
       {/* Brand Identity */}
       <div className="flex items-center gap-4">
-        <div className="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary cursor-default">
+        <div className="text-xl md:text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary cursor-default">
           HABIT TRACKER
         </div>
       </div>
 
       {/* Primary Navigation */}
-      <div className="flex items-center gap-8 bg-surface-900/50 px-6 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+      <div className="flex items-center gap-4 md:gap-8 bg-surface-900/50 px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-white/5 backdrop-blur-sm order-3 w-full justify-center md:order-none md:w-auto md:justify-start">
         <button
           onClick={() => setCurrentView('home')}
-          className={`transition-colors font-medium ${currentView === 'home' ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
+          className={`transition-colors text-sm md:text-base font-medium ${currentView === 'home' ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
         >
           Home
         </button>
         <button
           onClick={() => setCurrentView('dashboard')}
-          className={`transition-colors font-medium ${currentView === 'dashboard' ? 'text-secondary' : 'text-gray-400 hover:text-gray-200'}`}
+          className={`transition-colors text-sm md:text-base font-medium ${currentView === 'dashboard' ? 'text-secondary' : 'text-gray-400 hover:text-gray-200'}`}
         >
           Dashboard
         </button>
