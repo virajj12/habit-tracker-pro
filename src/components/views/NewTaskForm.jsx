@@ -12,6 +12,8 @@ const DAYS_OF_WEEK = [
 
 export default function NewTaskForm({ onTaskAdded }) {
   const [taskName, setTaskName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [isDaily, setIsDaily] = useState(true);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -94,6 +96,7 @@ export default function NewTaskForm({ onTaskAdded }) {
     e.preventDefault();
     if (!taskName.trim()) return;
 
+    setIsSubmitting(true);
     const payload = {
       name: taskName,
       category: selectedCategory,
@@ -123,9 +126,13 @@ export default function NewTaskForm({ onTaskAdded }) {
         onTaskAdded(data.data);
         // Reset form slightly
         setTaskName('');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -291,8 +298,29 @@ export default function NewTaskForm({ onTaskAdded }) {
         )}
       </div>
 
-      <button type="submit" className="w-full bg-primary hover:bg-primary/80 text-white font-medium py-2.5 rounded-lg transition-colors mt-2 shadow-lg shadow-primary/20">
-        Add Task
+      <button 
+        type="submit" 
+        disabled={isSubmitting || showSuccess || !taskName.trim()}
+        className={`w-full font-medium py-2.5 rounded-lg transition-all mt-2 shadow-lg flex justify-center items-center gap-2
+          ${showSuccess 
+            ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+            : !taskName.trim()
+              ? 'bg-surface-800 text-gray-500 cursor-not-allowed border border-white/5'
+              : 'bg-primary hover:bg-primary/80 text-white shadow-primary/20'
+          }
+          ${isSubmitting ? 'cursor-wait opacity-90' : ''}
+        `}
+      >
+        {isSubmitting && (
+          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        )}
+        {showSuccess && (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+        )}
+        {showSuccess ? 'Task Added!' : isSubmitting ? 'Adding...' : 'Add Task'}
       </button>
     </form>
   );
