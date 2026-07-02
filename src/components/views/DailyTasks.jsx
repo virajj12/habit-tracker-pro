@@ -15,12 +15,34 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
     return () => clearInterval(timer);
   }, [frictionTask, countdown]);
 
-  const toggleTask = (id) => {
-    const taskToToggle = tasks.find(t => t.id === id);
+  useEffect(() => {
+    // Fetch today's logs to initialize completion state
+    if (tasks.length === 0) return;
+    const fetchLogs = async () => {
+      try {
+        const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local time
+        const res = await fetch(`/api/habit-logs?dateString=${todayStr}`);
+        const data = await res.json();
+        if (data.success) {
+          const completedIds = data.data.map(log => log.habitId);
+          setTasks(prevTasks => prevTasks.map(t => ({
+            ...t,
+            completed: completedIds.includes(t._id)
+          })));
+        }
+      } catch (err) {
+        console.error("Error fetching logs:", err);
+      }
+    };
+    fetchLogs();
+  }, [tasks.length]); // Re-run when tasks array length changes (e.g. after initial load or add)
+
+  const toggleTask = async (id) => {
+    const taskToToggle = tasks.find(t => t._id === id);
     
     // Guard against toggling if locked
     if (taskToToggle.dependsOn) {
-      const parentTask = tasks.find(t => t.id === taskToToggle.dependsOn);
+      const parentTask = tasks.find(t => t._id === taskToToggle.dependsOn);
       if (parentTask && !parentTask.completed) return;
     }
 
@@ -32,28 +54,74 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
       return;
     }
 
-    setTasks(tasks.map(task => {
-      if (task.id === id) {
-        if (!task.completed && onTaskComplete) {
-          onTaskComplete();
-        }
-        return { ...task, completed: !task.completed };
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    
+    try {
+      if (taskToToggle.completed) {
+        // Undo completion
+        await fetch('/api/habit-logs', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ habitId: id, dateString: todayStr })
+        });
+      } else {
+        // Complete task
+        await fetch('/api/habit-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ habitId: id, status: 'completed', dateString: todayStr })
+        });
+        if (onTaskComplete) onTaskComplete();
       }
-      return task;
-    }));
-  };
 
-  const handleConfirmFailure = () => {
-    if (countdown === 0 && frictionReason.trim().length >= 10) {
-      setTasks(tasks.map(task => 
-        task.id === frictionTask.id ? { ...task, completed: true } : task
-      ));
-      setFrictionTask(null);
+      // Update local state
+      setTasks(tasks.map(task => {
+        if (task._id === id) {
+          return { ...task, completed: !task.completed };
+        }
+        return task;
+      }));
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const deleteTask = (id) => {
-    setTasks(tasks.filter(task => task.id !== id));
+  const handleConfirmFailure = async () => {
+    if (countdown === 0 && frictionReason.trim().length >= 10) {
+      const todayStr = new Date().toLocaleDateString('en-CA');
+      
+      try {
+        await fetch('/api/habit-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            habitId: frictionTask._id, 
+            status: 'completed', 
+            dateString: todayStr,
+            mood: 'bad' // Could be dynamic, but setting to bad for negative friction failure
+          })
+        });
+
+        setTasks(tasks.map(task => 
+          task._id === frictionTask._id ? { ...task, completed: true } : task
+        ));
+        setFrictionTask(null);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      const res = await fetch(`/api/habits/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setTasks(tasks.filter(task => task._id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -63,7 +131,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
         {tasks.map((task) => {
           let isLocked = false;
           if (task.dependsOn) {
-            const parentTask = tasks.find(t => t.id === task.dependsOn);
+            const parentTask = tasks.find(t => t._id === task.dependsOn);
             if (parentTask && !parentTask.completed) {
               isLocked = true;
             }
@@ -71,7 +139,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
 
           return (
           <div 
-            key={task.id} 
+            key={task._id} 
             className={`group p-4 rounded-xl border transition-all duration-500 flex items-center justify-between
               ${task.completed 
                 ? 'bg-surface-800/10 border-white/5 opacity-50' 
@@ -79,7 +147,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
                   ? 'bg-surface-900/30 border-white/5 opacity-40 grayscale pointer-events-none'
                   : 'bg-surface-800/30 hover:bg-surface-800/60 border-white/10'}`}
           >
-            <div className={`flex items-center gap-4 flex-1 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => toggleTask(task.id)}>
+            <div className={`flex items-center gap-4 flex-1 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => toggleTask(task._id)}>
               {/* Custom Checkbox */}
               <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors duration-300 relative
                 ${task.completed 
@@ -122,7 +190,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
                 </svg>
               </button>
               <button 
-                onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
+                onClick={(e) => { e.stopPropagation(); deleteTask(task._id); }}
                 className="p-2 text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 hover:text-red-300 transition"
                 title="Delete Task"
               >

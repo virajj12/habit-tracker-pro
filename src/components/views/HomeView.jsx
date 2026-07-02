@@ -25,14 +25,27 @@ export default function HomeView({ user }) {
   const currentLevelXp = xp % xpNextLevel;
   const progressPercent = (currentLevelXp / xpNextLevel) * 100;
 
-  const handleTaskComplete = () => {
-    setXp(prev => {
-      const newXp = prev + 10;
-      if (newXp % xpNextLevel === 0) {
-        setLevel(l => l + 1); // Level up!
-      }
-      return newXp;
-    });
+  const handleTaskComplete = async () => {
+    let newXp = xp + 10;
+    let newLevel = level;
+    
+    if (newXp % xpNextLevel === 0) {
+      newLevel += 1; // Level up!
+    }
+
+    setXp(newXp);
+    setLevel(newLevel);
+
+    // Persist to backend
+    try {
+      await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ xp: newXp, level: newLevel })
+      });
+    } catch (err) {
+      console.error("Failed to save XP:", err);
+    }
   };
 
   return (
@@ -74,17 +87,17 @@ export default function HomeView({ user }) {
       
       {/* Heatmap Section (Top Left) */}
       <GlassCard className="lg:col-span-2 flex flex-col">
-        <Heatmap />
+        <Heatmap user={user} />
       </GlassCard>
 
       {/* New Task Form (Top Right, Spanning 2 rows) */}
       <GlassCard className="lg:col-span-1 lg:row-span-2">
         <h2 className="text-lg font-semibold mb-4">New Task</h2>
-        <NewTaskForm />
+        <NewTaskForm onTaskAdded={(newTask) => setHabits(prev => [newTask, ...prev])} />
       </GlassCard>
 
       {/* Upcoming Tasks (Middle Left) */}
-      <UpcomingTasks />
+      <UpcomingTasks tasks={habits} />
 
       {/* Daily Tasks List (Bottom Full Width) */}
       <DailyTasks tasks={habits} setTasks={setHabits} onTaskComplete={handleTaskComplete} />

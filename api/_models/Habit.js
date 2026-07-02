@@ -59,6 +59,10 @@ const HabitSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  isVisible: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 export default mongoose.models.Habit || mongoose.model('Habit', HabitSchema);

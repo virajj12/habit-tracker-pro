@@ -10,7 +10,7 @@ const DAYS_OF_WEEK = [
   { label: 'S', value: 'Sat' },
 ];
 
-export default function NewTaskForm() {
+export default function NewTaskForm({ onTaskAdded }) {
   const [taskName, setTaskName] = useState('');
   const [isDaily, setIsDaily] = useState(true);
   const [startDate, setStartDate] = useState('');
@@ -56,8 +56,41 @@ export default function NewTaskForm() {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!taskName.trim()) return;
+
+    const payload = {
+      name: taskName,
+      category: selectedCategory,
+      type: 'positive', // Default type for new tasks
+      schedule: isDaily ? 'daily' : 'specific',
+      skipDays,
+      timePref: timeOption
+    };
+
+    if (timeOption === 'fixed') payload.timeSpecific = fixedTime;
+    if (timeOption === 'range') payload.timeSpecific = `${timeRangeStart}-${timeRangeEnd}`;
+    
+    try {
+      const res = await fetch('/api/habits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success && onTaskAdded) {
+        onTaskAdded(data.data);
+        // Reset form slightly
+        setTaskName('');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
-    <form className="flex flex-col gap-5 text-sm">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-sm">
       {/* Task Name */}
       <div>
         <label className="block text-gray-400 mb-1">Task Name</label>
@@ -218,7 +251,7 @@ export default function NewTaskForm() {
         )}
       </div>
 
-      <button type="button" className="w-full bg-primary hover:bg-primary/80 text-white font-medium py-2.5 rounded-lg transition-colors mt-2 shadow-lg shadow-primary/20">
+      <button type="submit" className="w-full bg-primary hover:bg-primary/80 text-white font-medium py-2.5 rounded-lg transition-colors mt-2 shadow-lg shadow-primary/20">
         Add Task
       </button>
     </form>

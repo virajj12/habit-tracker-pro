@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
 
-export default function UpcomingTasks() {
+export default function UpcomingTasks({ tasks = [] }) {
   const [currentTask, setCurrentTask] = useState(null);
   const [nextTask, setNextTask] = useState(null);
 
@@ -15,9 +15,18 @@ export default function UpcomingTasks() {
       let current = null;
       let upcoming = null;
 
-      const mockAgenda = []; // Fetch from API in the future
-      for (const task of mockAgenda) {
-        if (currentTimeStr >= task.startTime && currentTimeStr < task.endTime) {
+      const agenda = tasks
+        .filter(t => t.scheduledTime && (t.scheduledTime.timeOption === 'fixed' || t.scheduledTime.timeOption === 'range'))
+        .map(t => {
+          const startTime = t.scheduledTime.timeOption === 'fixed' ? t.scheduledTime.fixedTime : t.scheduledTime.timeRangeStart;
+          const endTime = t.scheduledTime.timeOption === 'fixed' ? t.scheduledTime.fixedTime : t.scheduledTime.timeRangeEnd;
+          return { ...t, startTime, endTime };
+        })
+        .filter(t => t.startTime)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+      for (const task of agenda) {
+        if (task.endTime && currentTimeStr >= task.startTime && currentTimeStr < task.endTime) {
           current = task;
         } else if (task.startTime >= currentTimeStr && !upcoming) {
           upcoming = task;
@@ -32,7 +41,7 @@ export default function UpcomingTasks() {
     // Update every minute
     const interval = setInterval(updateTasks, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [tasks]);
 
   return (
     <GlassCard className="lg:col-span-2 flex flex-col justify-center">

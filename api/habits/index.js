@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   switch (method) {
     case 'GET':
       try {
-        const habits = await Habit.find({ userId }).sort({ createdAt: -1 });
+        const habits = await Habit.find({ userId, isVisible: { $ne: false } }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: habits });
       } catch (error) {
         res.status(400).json({ success: false, error: error.message });

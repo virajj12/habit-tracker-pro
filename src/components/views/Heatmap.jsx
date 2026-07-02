@@ -20,14 +20,16 @@ function getDatesInRange(startDate, endDate) {
 
 
 
-export default function Heatmap() {
+export default function Heatmap({ user }) {
   const [rangeOption, setRangeOption] = useState('month');
   
   // Gamification state
-  const [tokens, setTokens] = useState(3);
+  const [tokens, setTokens] = useState(user?.streakTokens || 3);
   const [tokenDays, setTokenDays] = useState(new Set());
   const [showModal, setShowModal] = useState(false);
   const [targetDate, setTargetDate] = useState(null);
+  
+  const [habitLogs, setHabitLogs] = useState({});
 
   // Calculate Start and End Dates based on the selected option
   const { startDate, endDate } = useMemo(() => {
@@ -49,7 +51,33 @@ export default function Heatmap() {
   }, [rangeOption]);
 
   const dates = useMemo(() => getDatesInRange(startDate, endDate), [startDate, endDate]);
-  const habitLogs = useMemo(() => ({}), [dates]); // To be wired up to /api/habit-logs
+  
+  useEffect(() => {
+    // Fetch habit logs for this date range
+    const startStr = startDate.toLocaleDateString('en-CA');
+    const endStr = endDate.toLocaleDateString('en-CA');
+    
+    fetch(`/api/habit-logs?startDate=${startStr}&endDate=${endStr}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const logsByDate = {};
+          const freezeDays = new Set();
+          
+          data.data.forEach(log => {
+            if (log.status === 'skipped-token') {
+              freezeDays.add(log.dateString);
+            } else if (log.status === 'completed') {
+              logsByDate[log.dateString] = (logsByDate[log.dateString] || 0) + 1;
+            }
+          });
+          
+          setHabitLogs(logsByDate);
+          setTokenDays(freezeDays);
+        }
+      })
+      .catch(err => console.error("Error fetching logs for heatmap:", err));
+  }, [startDate, endDate]);
 
   const getColorClass = (intensity, isTokenUsed) => {
     if (isTokenUsed) return 'bg-amber-400 border-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.6)] z-10';
@@ -79,10 +107,28 @@ export default function Heatmap() {
 
   const handleUseToken = async () => {
     if (tokens > 0 && targetDate) {
-      // Mock API call to update log status to 'skipped-token'
-      // await fetch(`/api/habit-logs/token`, { method: 'PUT', body: JSON.stringify({ date: targetDate }) });
-      setTokens(prev => prev - 1);
-      setTokenDays(prev => new Set(prev).add(targetDate));
+      try {
+        const res = await fetch(`/api/habit-logs/token`, { 
+          method: 'PUT', 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dateString: targetDate }) 
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          setTokens(prev => prev - 1);
+          setTokenDays(prev => new Set(prev).add(targetDate));
+          
+          // Deduct from user
+          await fetch('/api/auth/me', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ streakTokens: tokens - 1 })
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
     setShowModal(false);
     setTargetDate(null);

@@ -53,13 +53,17 @@ export default async function handler(req, res) {
 
     case 'DELETE':
       try {
-        const deletedHabit = await Habit.deleteOne({ _id: id, userId });
-        if (!deletedHabit.deletedCount) {
+        const deletedHabit = await Habit.findOneAndUpdate(
+          { _id: id, userId },
+          { isVisible: false },
+          { new: true }
+        );
+        if (!deletedHabit) {
           return res.status(404).json({ success: false, message: 'Habit not found' });
         }
         
-        // Optionally delete all associated logs when a habit is deleted
-        await HabitLog.deleteMany({ habitId: id });
+        // DO NOT delete associated logs for soft-deleted habits, to preserve historical stats!
+        // await HabitLog.deleteMany({ habitId: id });
         
         res.status(200).json({ success: true, data: {} });
       } catch (error) {
