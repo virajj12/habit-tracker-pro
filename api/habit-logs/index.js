@@ -18,61 +18,67 @@ export default async function handler(req, res) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
-  await dbConnect();
+  try {
+    await dbConnect();
 
-  switch (method) {
-    case 'GET':
-      try {
-        const { dateString, startDate, endDate } = req.query;
-        let filter = { userId };
-        
-        if (dateString) {
-          filter.dateString = dateString;
-        } else if (startDate && endDate) {
-          filter.dateString = { $gte: startDate, $lte: endDate };
+    switch (method) {
+      case 'GET':
+        try {
+          const { dateString, startDate, endDate } = req.query;
+          let filter = { userId };
+          
+          if (dateString) {
+            filter.dateString = dateString;
+          } else if (startDate && endDate) {
+            filter.dateString = { $gte: startDate, $lte: endDate };
+          }
+          
+          const logs = await HabitLog.find(filter);
+          res.status(200).json({ success: true, data: logs });
+        } catch (error) {
+          res.status(400).json({ success: false, error: error.message });
         }
-        
-        const logs = await HabitLog.find(filter);
-        res.status(200).json({ success: true, data: logs });
-      } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-      }
-      break;
+        break;
 
-    case 'POST':
-      try {
-        const { habitId, status, dateString, mood } = req.body;
-        
-        // Upsert the log for this specific date and habit
-        const log = await HabitLog.findOneAndUpdate(
-          { userId, habitId, dateString },
-          { status, mood, completionTime: Date.now() },
-          { new: true, upsert: true, runValidators: true }
-        );
-        
-        res.status(201).json({ success: true, data: log });
-      } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-      }
-      break;
-    
-    case 'DELETE':
-      // Used to undo a completion
-      try {
-        const { habitId, dateString } = req.body;
-        const deleted = await HabitLog.findOneAndDelete({ userId, habitId, dateString });
-        if (!deleted) {
-          return res.status(404).json({ success: false, message: 'Log not found' });
+      case 'POST':
+        try {
+          const { habitId, status, dateString, mood } = req.body;
+          
+          // Upsert the log for this specific date and habit
+          const log = await HabitLog.findOneAndUpdate(
+            { userId, habitId, dateString },
+            { status, mood, completionTime: Date.now() },
+            { new: true, upsert: true, runValidators: true }
+          );
+          
+          res.status(201).json({ success: true, data: log });
+        } catch (error) {
+          console.error("POST Error:", error);
+          res.status(400).json({ success: false, error: error.message, stack: error.stack });
         }
-        res.status(200).json({ success: true, data: {} });
-      } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-      }
-      break;
+        break;
+      
+      case 'DELETE':
+        // Used to undo a completion
+        try {
+          const { habitId, dateString } = req.body;
+          const deleted = await HabitLog.findOneAndDelete({ userId, habitId, dateString });
+          if (!deleted) {
+            return res.status(404).json({ success: false, message: 'Log not found' });
+          }
+          res.status(200).json({ success: true, data: {} });
+        } catch (error) {
+          res.status(400).json({ success: false, error: error.message });
+        }
+        break;
 
-    default:
-      res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
-      res.status(405).json({ success: false, message: `Method ${method} Not Allowed` });
-      break;
+      default:
+        res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+        res.status(405).json({ success: false, message: `Method ${method} Not Allowed` });
+        break;
+    }
+  } catch (globalError) {
+    console.error("Global Handler Error:", globalError);
+    res.status(500).json({ success: false, error: globalError.message, stack: globalError.stack });
   }
 }
