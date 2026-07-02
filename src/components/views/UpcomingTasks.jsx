@@ -23,7 +23,7 @@ export default function UpcomingTasks({ tasks = [] }) {
           return { ...t, startTime, endTime };
         })
         .filter(t => t.startTime)
-        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+        .sort((a, b) => String(a.startTime).localeCompare(String(b.startTime)));
 
       for (const task of agenda) {
         if (task.endTime && currentTimeStr >= task.startTime && currentTimeStr < task.endTime) {

@@ -1,5 +1,6 @@
-import dbConnect from '../../../_utils/dbConnect.js';
-import HabitLog from '../../../_models/HabitLog.js';
+import dbConnect from '../../_utils/dbConnect.js';
+import HabitLog from '../../_models/HabitLog.js';
+import Habit from '../../_models/Habit.js';
 import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
 
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
     // Instead of a dummy log, let's just find one of the user's habits to attach it to, or create a 'system' habit.
     // Easiest is to just fetch the user's oldest habit and attach it there.
     
-    const userHabits = await import('../../../_models/Habit.js').then(m => m.default.find({ userId }).limit(1));
+    const userHabits = await Habit.find({ userId }).limit(1);
     if (userHabits.length === 0) {
       return res.status(400).json({ success: false, message: 'No habits found to freeze' });
     }
