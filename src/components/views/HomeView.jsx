@@ -25,6 +25,10 @@ export default function HomeView({ user }) {
   const currentLevelXp = xp % xpNextLevel;
   const progressPercent = (currentLevelXp / xpNextLevel) * 100;
 
+  const totalTasks = habits.length;
+  const completedTasks = habits.filter(h => h.completed).length;
+  const momentumPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
   const handleTaskComplete = async () => {
     let newXp = xp + 10;
     let newLevel = level;
@@ -76,7 +80,7 @@ export default function HomeView({ user }) {
           <div>
             <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">Velocity</div>
             <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-blue-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]">
-              85% Momentum
+              {momentumPercent}% Momentum
             </div>
           </div>
         </div>

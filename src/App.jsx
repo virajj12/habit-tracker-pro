@@ -52,7 +52,7 @@ function App() {
         <LoginView onLogin={(userData) => { setUser(userData); setIsLoggedIn(true); }} />
       ) : (
         <>
-          <Navbar currentView={currentView} setCurrentView={setCurrentView} onLogout={handleLogout} />
+          <Navbar currentView={currentView} setCurrentView={setCurrentView} onLogout={handleLogout} user={user} />
           
           {/* View Routing */}
           <main className="mt-4 relative">
