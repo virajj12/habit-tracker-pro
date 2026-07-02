@@ -32,7 +32,12 @@ export default function LoginView({ onLogin }) {
         });
 
         if (!res.ok) {
-          const data = await res.json();
+          let data = {};
+          try {
+            data = await res.json();
+          } catch (err) {
+            throw new Error('Server error: Please check your environment variables.');
+          }
           throw new Error(data.message || 'Failed to sign up');
         }
 
@@ -54,7 +59,12 @@ export default function LoginView({ onLogin }) {
         });
 
         if (!res.ok) {
-          const data = await res.json();
+          let data = {};
+          try {
+            data = await res.json();
+          } catch (err) {
+            throw new Error('Server error: Please check your environment variables.');
+          }
           throw new Error(data.message || 'Invalid credentials');
         }
         
