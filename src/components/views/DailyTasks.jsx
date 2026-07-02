@@ -38,11 +38,12 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
   }, [tasks.length]); // Re-run when tasks array length changes (e.g. after initial load or add)
 
   const toggleTask = async (id) => {
-    const taskToToggle = tasks.find(t => t._id === id);
+    const taskToToggle = tasks.find(t => (t._id || t.id) === id);
+    if (!taskToToggle) return;
     
     // Guard against toggling if locked
     if (taskToToggle.dependsOn) {
-      const parentTask = tasks.find(t => t._id === taskToToggle.dependsOn);
+      const parentTask = tasks.find(t => (t._id || t.id) === taskToToggle.dependsOn);
       if (parentTask && !parentTask.completed) return;
     }
 
@@ -53,6 +54,14 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
       setFrictionReason('');
       return;
     }
+
+    // Update local state optimistically
+    setTasks(tasks.map(task => {
+      if ((task._id || task.id) === id) {
+        return { ...task, completed: !task.completed };
+      }
+      return task;
+    }));
 
     const todayStr = new Date().toLocaleDateString('en-CA');
     
@@ -73,16 +82,15 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
         });
         if (onTaskComplete) onTaskComplete();
       }
-
-      // Update local state
+    } catch (err) {
+      console.error(err);
+      // Revert optimistic update on error
       setTasks(tasks.map(task => {
-        if (task._id === id) {
-          return { ...task, completed: !task.completed };
+        if ((task._id || task.id) === id) {
+          return { ...task, completed: taskToToggle.completed };
         }
         return task;
       }));
-    } catch (err) {
-      console.error(err);
     }
   };
 
@@ -129,9 +137,10 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
       <h2 className="text-lg font-semibold mb-4">Today's Tasks</h2>
       <div className="flex flex-col gap-3">
         {tasks.map((task) => {
+          const taskId = task._id || task.id;
           let isLocked = false;
           if (task.dependsOn) {
-            const parentTask = tasks.find(t => t._id === task.dependsOn);
+            const parentTask = tasks.find(t => (t._id || t.id) === task.dependsOn);
             if (parentTask && !parentTask.completed) {
               isLocked = true;
             }
@@ -139,7 +148,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
 
           return (
           <div 
-            key={task._id} 
+            key={taskId} 
             className={`group p-4 rounded-xl border transition-all duration-500 flex items-center justify-between
               ${task.completed 
                 ? 'bg-surface-800/10 border-white/5 opacity-50' 
@@ -147,7 +156,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
                   ? 'bg-surface-900/30 border-white/5 opacity-40 grayscale pointer-events-none'
                   : 'bg-surface-800/30 hover:bg-surface-800/60 border-white/10'}`}
           >
-            <div className={`flex items-center gap-4 flex-1 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => toggleTask(task._id)}>
+            <div className={`flex items-center gap-4 flex-1 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => toggleTask(taskId)}>
               {/* Custom Checkbox */}
               <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors duration-300 relative
                 ${task.completed 
@@ -190,7 +199,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
                 </svg>
               </button>
               <button 
-                onClick={(e) => { e.stopPropagation(); deleteTask(task._id); }}
+                onClick={(e) => { e.stopPropagation(); deleteTask(taskId); }}
                 className="p-2 text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 hover:text-red-300 transition"
                 title="Delete Task"
               >

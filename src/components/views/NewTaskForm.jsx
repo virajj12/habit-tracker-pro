@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const DAYS_OF_WEEK = [
   { label: 'S', value: 'Sun' },
@@ -28,6 +28,24 @@ export default function NewTaskForm({ onTaskAdded }) {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
+  useEffect(() => {
+    // Fetch user categories
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          const userCategories = data.data.map(c => c.name);
+          const allCategories = [...new Set(['General', 'Health', 'Work', 'Productivity', ...userCategories])];
+          setCategories(allCategories);
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   const toggleSkipDay = (dayValue) => {
     if (skipDays.includes(dayValue)) {
       setSkipDays(skipDays.filter(d => d !== dayValue));
@@ -47,12 +65,28 @@ export default function NewTaskForm({ onTaskAdded }) {
     }
   };
 
-  const handleAddNewCategory = () => {
+  const handleAddNewCategory = async () => {
     if (newCategoryName.trim() !== '') {
-      setCategories([...categories, newCategoryName]);
-      setSelectedCategory(newCategoryName);
+      const catName = newCategoryName.trim();
+      
+      // Optimsitic UI
+      if (!categories.includes(catName)) {
+        setCategories([...categories, catName]);
+      }
+      setSelectedCategory(catName);
       setNewCategoryName('');
       setIsCreatingCategory(false);
+
+      // Save to database
+      try {
+        await fetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: catName })
+        });
+      } catch (err) {
+        console.error("Error creating category:", err);
+      }
     }
   };
 
@@ -63,14 +97,20 @@ export default function NewTaskForm({ onTaskAdded }) {
     const payload = {
       name: taskName,
       category: selectedCategory,
-      type: 'positive', // Default type for new tasks
-      schedule: isDaily ? 'daily' : 'specific',
+      habitType: 'positive', 
+      dateRange: {
+        isDaily,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+      },
       skipDays,
-      timePref: timeOption
+      scheduledTime: {
+        timeOption,
+        fixedTime: timeOption === 'fixed' ? fixedTime : undefined,
+        timeRangeStart: timeOption === 'range' ? timeRangeStart : undefined,
+        timeRangeEnd: timeOption === 'range' ? timeRangeEnd : undefined,
+      }
     };
-
-    if (timeOption === 'fixed') payload.timeSpecific = fixedTime;
-    if (timeOption === 'range') payload.timeSpecific = `${timeRangeStart}-${timeRangeEnd}`;
     
     try {
       const res = await fetch('/api/habits', {
