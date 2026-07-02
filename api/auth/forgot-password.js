@@ -1,5 +1,5 @@
-import dbConnect from '../../_utils/dbConnect.js';
-import User from '../../_models/User.js';
+import dbConnect from '../_utils/dbConnect.js';
+import User from '../_models/User.js';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
