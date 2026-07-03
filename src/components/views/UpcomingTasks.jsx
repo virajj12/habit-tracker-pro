@@ -8,27 +8,49 @@ export default function UpcomingTasks({ tasks = [] }) {
   useEffect(() => {
     const updateTasks = () => {
       const now = new Date();
-      const currentHours = now.getHours();
-      const currentMinutes = now.getMinutes();
-      const currentTimeStr = `${currentHours.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
+      const currentMins = now.getHours() * 60 + now.getMinutes();
 
       let current = null;
       let upcoming = null;
 
       const agenda = tasks
-        .filter(t => t.scheduledTime && (t.scheduledTime.timeOption === 'fixed' || t.scheduledTime.timeOption === 'range'))
+        // Filter out completed tasks and tasks without valid schedules
+        .filter(t => !t.completed && t.scheduledTime && (t.scheduledTime.timeOption === 'fixed' || t.scheduledTime.timeOption === 'range'))
         .map(t => {
-          const startTime = t.scheduledTime.timeOption === 'fixed' ? t.scheduledTime.fixedTime : t.scheduledTime.timeRangeStart;
-          const endTime = t.scheduledTime.timeOption === 'fixed' ? t.scheduledTime.fixedTime : t.scheduledTime.timeRangeEnd;
-          return { ...t, startTime, endTime };
+          let startMins = null;
+          let endMins = null;
+          
+          if (t.scheduledTime.timeOption === 'fixed' && t.scheduledTime.fixedTime) {
+            const [h, m] = t.scheduledTime.fixedTime.split(':').map(Number);
+            startMins = h * 60 + m;
+            endMins = startMins + 60; // Give fixed tasks a 1-hour active window
+          } else if (t.scheduledTime.timeOption === 'range' && t.scheduledTime.timeRangeStart) {
+            const [h1, m1] = t.scheduledTime.timeRangeStart.split(':').map(Number);
+            startMins = h1 * 60 + m1;
+            if (t.scheduledTime.timeRangeEnd) {
+              const [h2, m2] = t.scheduledTime.timeRangeEnd.split(':').map(Number);
+              endMins = h2 * 60 + m2;
+              if (endMins < startMins) endMins += 24 * 60; // Handle overnight ranges
+            } else {
+              endMins = startMins + 60; // Fallback if no end time
+            }
+          }
+          
+          return { ...t, startMins, endMins };
         })
-        .filter(t => t.startTime)
-        .sort((a, b) => String(a.startTime).localeCompare(String(b.startTime)));
+        .filter(t => t.startMins !== null)
+        .sort((a, b) => a.startMins - b.startMins);
 
       for (const task of agenda) {
-        if (task.endTime && currentTimeStr >= task.startTime && currentTimeStr < task.endTime) {
+        // Handle overnight wrap-around for current time check
+        const isCurrent = (currentMins >= task.startMins && currentMins < task.endMins) || 
+                          (task.endMins > 1440 && currentMins < task.endMins - 1440);
+                          
+        if (!current && isCurrent) {
           current = task;
-        } else if (task.startTime >= currentTimeStr && !upcoming) {
+        } 
+        // Find first upcoming task that is strictly in the future
+        else if (!upcoming && !isCurrent && task.startMins > currentMins) {
           upcoming = task;
         }
       }
@@ -42,6 +64,13 @@ export default function UpcomingTasks({ tasks = [] }) {
     const interval = setInterval(updateTasks, 60000);
     return () => clearInterval(interval);
   }, [tasks]);
+
+  const renderTime = (task) => {
+    if (task.scheduledTime.timeOption === 'range') {
+      return `${task.scheduledTime.timeRangeStart} - ${task.scheduledTime.timeRangeEnd || '?'}`;
+    }
+    return task.scheduledTime.fixedTime;
+  };
 
   return (
     <GlassCard className="lg:col-span-2 flex flex-col justify-center">
@@ -58,7 +87,7 @@ export default function UpcomingTasks({ tasks = [] }) {
             </div>
             {currentTask && (
               <div className="text-sm text-primary font-semibold bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">
-                {currentTask.startTime} - {currentTask.endTime}
+                {renderTime(currentTask)}
               </div>
             )}
           </div>
@@ -73,7 +102,7 @@ export default function UpcomingTasks({ tasks = [] }) {
             </div>
             {nextTask && (
               <div className="text-sm text-secondary font-semibold bg-secondary/10 px-3 py-1 rounded-lg border border-secondary/20">
-                {nextTask.startTime}
+                {renderTime(nextTask)}
               </div>
             )}
           </div>
