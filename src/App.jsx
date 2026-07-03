@@ -5,6 +5,7 @@ import HomeView from './components/views/HomeView';
 import DashboardView from './components/views/DashboardView';
 import LoginView from './components/views/LoginView';
 import ResetPasswordView from './components/views/ResetPasswordView';
+import LoadingScreen from './components/views/LoadingScreen';
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
@@ -12,6 +13,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [resetToken, setResetToken] = useState(null);
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
     // Check for password reset token in URL
@@ -47,44 +49,40 @@ function App() {
     setUser(null);
   };
 
-  if (loadingAuth) {
-    return (
-      <GlobalLayout>
-        <div className="flex items-center justify-center min-h-[80vh]">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-        </div>
-      </GlobalLayout>
-    );
-  }
-
-  // Handle Password Reset Flow
-  if (resetToken && !isLoggedIn) {
-    return (
-      <GlobalLayout>
-        <ResetPasswordView 
-          resetToken={resetToken} 
-          onResetComplete={() => setResetToken(null)} 
-        />
-      </GlobalLayout>
-    );
-  }
-
   return (
-    <GlobalLayout>
-      {!isLoggedIn ? (
-        <LoginView onLogin={(userData) => { setUser(userData); setIsLoggedIn(true); }} />
-      ) : (
-        <>
-          <Navbar currentView={currentView} setCurrentView={setCurrentView} onLogout={handleLogout} user={user} />
-          
-          {/* View Routing */}
-          <main className="mt-4 relative">
-            {currentView === 'home' && <HomeView user={user} />}
-            {currentView === 'dashboard' && <DashboardView user={user} />}
-          </main>
-        </>
+    <>
+      {/* Loading Screen Overlay */}
+      {!appReady && (
+        <LoadingScreen 
+          isLoading={loadingAuth} 
+          onAnimationComplete={() => setAppReady(true)} 
+        />
       )}
-    </GlobalLayout>
+
+      {/* Main App content mounts underneath the loading screen while it's closing */}
+      {(!loadingAuth) && (
+        <GlobalLayout>
+          {resetToken && !isLoggedIn ? (
+            <ResetPasswordView 
+              resetToken={resetToken} 
+              onResetComplete={() => setResetToken(null)} 
+            />
+          ) : !isLoggedIn ? (
+            <LoginView onLogin={(userData) => { setUser(userData); setIsLoggedIn(true); }} />
+          ) : (
+            <>
+              <Navbar currentView={currentView} setCurrentView={setCurrentView} onLogout={handleLogout} user={user} />
+              
+              {/* View Routing */}
+              <main className="mt-4 relative">
+                {currentView === 'home' && <HomeView user={user} />}
+                {currentView === 'dashboard' && <DashboardView user={user} />}
+              </main>
+            </>
+          )}
+        </GlobalLayout>
+      )}
+    </>
   );
 }
 
