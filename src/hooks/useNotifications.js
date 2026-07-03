@@ -9,11 +9,7 @@ export default function useNotifications(habits) {
 
     const checkSchedules = () => {
       const now = new Date();
-      // Format current time as HH:MM
-      const currentHours = String(now.getHours()).padStart(2, '0');
-      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-      const currentTimeStr = `${currentHours}:${currentMinutes}`;
-      
+      const currentMins = now.getHours() * 60 + now.getMinutes();
       const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
 
       habits.forEach(habit => {
@@ -21,10 +17,17 @@ export default function useNotifications(habits) {
         if (habit.completed || !habit.scheduledTime) return;
 
         let shouldNotify = false;
+        let scheduledMins = null;
         
-        if (habit.scheduledTime.timeOption === 'fixed' && habit.scheduledTime.fixedTime === currentTimeStr) {
-          shouldNotify = true;
-        } else if (habit.scheduledTime.timeOption === 'range' && habit.scheduledTime.timeRangeStart === currentTimeStr) {
+        if (habit.scheduledTime.timeOption === 'fixed' && habit.scheduledTime.fixedTime) {
+          const [h, m] = habit.scheduledTime.fixedTime.split(':').map(Number);
+          scheduledMins = h * 60 + m;
+        } else if (habit.scheduledTime.timeOption === 'range' && habit.scheduledTime.timeRangeStart) {
+          const [h, m] = habit.scheduledTime.timeRangeStart.split(':').map(Number);
+          scheduledMins = h * 60 + m;
+        }
+
+        if (scheduledMins !== null && currentMins >= scheduledMins) {
           shouldNotify = true;
         }
 
