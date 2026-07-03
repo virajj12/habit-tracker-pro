@@ -31,13 +31,11 @@
 /* Loading Screen Animations */
 @keyframes form-in {
   0% {
-    letter-spacing: 1em;
-    filter: blur(20px);
+    filter: blur(12px);
     opacity: 0;
-    transform: scale(1.5);
+    transform: scale(1.2);
   }
   100% {
-    letter-spacing: 0.3em;
     filter: blur(0);
     opacity: 1;
     transform: scale(1);
@@ -51,16 +49,18 @@
     filter: blur(0);
   }
   100% {
-    transform: scale(5);
+    transform: scale(3);
     opacity: 0;
-    filter: blur(10px);
+    filter: blur(8px);
   }
 }
 
 .animate-form-in {
-  animation: form-in 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: form-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
 }
 
 .animate-zoom-out {
-  animation: zoom-out 0.8s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  animation: zoom-out 0.6s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+  will-change: transform, opacity, filter;
 }
