@@ -7,3 +7,23 @@
     @apply bg-background text-white antialiased min-h-screen overflow-x-hidden;
   }
 }
+
+/* Custom Scrollbar for Heatmap and other overflow containers */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

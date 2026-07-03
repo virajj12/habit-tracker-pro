@@ -66,7 +66,7 @@ export default function HomeView({ user }) {
           <div className="flex items-center gap-2 md:gap-4">
             <div className="w-32 md:w-48 h-3 bg-surface-900 rounded-full overflow-hidden border border-white/5 relative shrink-0">
               <div 
-                className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-secondary transition-all duration-700 ease-out"
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-secondary to-primary transition-all duration-700 ease-out"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
