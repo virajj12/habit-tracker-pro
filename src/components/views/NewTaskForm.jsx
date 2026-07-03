@@ -10,23 +10,44 @@ const DAYS_OF_WEEK = [
   { label: 'S', value: 'Sat' },
 ];
 
-export default function NewTaskForm({ onTaskAdded }) {
-  const [taskName, setTaskName] = useState('');
+export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, onCancel }) {
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toISOString().split('T')[0];
+  };
+
+  const [taskName, setTaskName] = useState(initialData?.name || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [isDaily, setIsDaily] = useState(true);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [isDaily, setIsDaily] = useState(initialData?.dateRange ? initialData.dateRange.isDaily : true);
+  const [startDate, setStartDate] = useState(initialData?.dateRange?.startDate ? formatDate(initialData.dateRange.startDate) : '');
+  const [endDate, setEndDate] = useState(initialData?.dateRange?.endDate ? formatDate(initialData.dateRange.endDate) : '');
   
-  const [skipDays, setSkipDays] = useState([]);
+  const [skipDays, setSkipDays] = useState(initialData?.skipDays || []);
   
-  const [timeOption, setTimeOption] = useState('any'); // any, fixed, range
-  const [fixedTime, setFixedTime] = useState('');
-  const [timeRangeStart, setTimeRangeStart] = useState('');
-  const [timeRangeEnd, setTimeRangeEnd] = useState('');
+  const [timeOption, setTimeOption] = useState(initialData?.scheduledTime?.timeOption || 'any'); // any, fixed, range
+  const [fixedTime, setFixedTime] = useState(initialData?.scheduledTime?.fixedTime || '');
+  const [timeRangeStart, setTimeRangeStart] = useState(initialData?.scheduledTime?.timeRangeStart || '');
+  const [timeRangeEnd, setTimeRangeEnd] = useState(initialData?.scheduledTime?.timeRangeEnd || '');
+
+  // Keep state in sync if initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setTaskName(initialData.name || '');
+      setIsDaily(initialData.dateRange ? initialData.dateRange.isDaily : true);
+      setStartDate(initialData.dateRange?.startDate ? formatDate(initialData.dateRange.startDate) : '');
+      setEndDate(initialData.dateRange?.endDate ? formatDate(initialData.dateRange.endDate) : '');
+      setSkipDays(initialData.skipDays || []);
+      setTimeOption(initialData.scheduledTime?.timeOption || 'any');
+      setFixedTime(initialData.scheduledTime?.fixedTime || '');
+      setTimeRangeStart(initialData.scheduledTime?.timeRangeStart || '');
+      setTimeRangeEnd(initialData.scheduledTime?.timeRangeEnd || '');
+      setSelectedCategory(initialData.category || 'General');
+    }
+  }, [initialData]);
 
   const [categories, setCategories] = useState(['General', 'Health', 'Work', 'Productivity']);
-  const [selectedCategory, setSelectedCategory] = useState('General');
+  const [selectedCategory, setSelectedCategory] = useState(initialData?.category || 'General');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
@@ -116,18 +137,30 @@ export default function NewTaskForm({ onTaskAdded }) {
     };
     
     try {
-      const res = await fetch('/api/habits', {
-        method: 'POST',
+      const isEditing = !!initialData;
+      const url = isEditing ? `/api/habits/${initialData._id}` : '/api/habits';
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (data.success && onTaskAdded) {
-        onTaskAdded(data.data);
-        // Reset form slightly
-        setTaskName('');
+      
+      if (data.success) {
+        if (isEditing && onTaskUpdated) {
+          onTaskUpdated(data.data);
+        } else if (!isEditing && onTaskAdded) {
+          onTaskAdded(data.data);
+        }
+        
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 2000);
+        
+        if (!isEditing) {
+          setTaskName('');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -298,30 +331,41 @@ export default function NewTaskForm({ onTaskAdded }) {
         )}
       </div>
 
-      <button 
-        type="submit" 
-        disabled={isSubmitting || showSuccess || !taskName.trim()}
-        className={`w-full font-medium py-2.5 rounded-lg transition-all mt-2 shadow-lg flex justify-center items-center gap-2
-          ${showSuccess 
-            ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
-            : !taskName.trim()
-              ? 'bg-surface-800 text-gray-500 cursor-not-allowed border border-white/5'
-              : 'bg-primary hover:bg-primary/80 text-white shadow-primary/20'
-          }
-          ${isSubmitting ? 'cursor-wait opacity-90' : ''}
-        `}
-      >
-        {isSubmitting && (
-          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+      <div className="flex gap-3 mt-2">
+        {onCancel && (
+          <button 
+            type="button" 
+            onClick={onCancel}
+            className="w-1/3 bg-surface-800/50 hover:bg-surface-700/50 text-gray-400 border border-white/10 py-2.5 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
         )}
-        {showSuccess && (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-        )}
-        {showSuccess ? 'Task Added!' : isSubmitting ? 'Adding...' : 'Add Task'}
-      </button>
+        <button 
+          type="submit" 
+          disabled={isSubmitting || showSuccess || !taskName.trim()}
+          className={`${onCancel ? 'w-2/3' : 'w-full'} font-medium py-2.5 rounded-lg transition-all shadow-lg flex justify-center items-center gap-2
+            ${showSuccess 
+              ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+              : !taskName.trim()
+                ? 'bg-surface-800 text-gray-500 cursor-not-allowed border border-white/5'
+                : 'bg-primary hover:bg-primary/80 text-white shadow-primary/20'
+            }
+            ${isSubmitting ? 'cursor-wait opacity-90' : ''}
+          `}
+        >
+          {isSubmitting && (
+            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
+          {showSuccess && (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+          )}
+          {showSuccess ? (initialData ? 'Saved!' : 'Task Added!') : isSubmitting ? (initialData ? 'Saving...' : 'Adding...') : (initialData ? 'Save Changes' : 'Add Task')}
+        </button>
+      </div>
     </form>
   );
 }

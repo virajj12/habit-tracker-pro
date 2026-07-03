@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
+import NewTaskForm from './NewTaskForm';
 
 export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
 
   const [frictionTask, setFrictionTask] = useState(null);
   const [countdown, setCountdown] = useState(10);
   const [frictionReason, setFrictionReason] = useState('');
+  const [editingTask, setEditingTask] = useState(null);
 
   useEffect(() => {
     let timer;
@@ -196,6 +198,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
             {/* Action Buttons (Modify/Delete) */}
             <div className={`flex gap-2 transition-opacity duration-300 ${task.completed || isLocked ? 'opacity-0 pointer-events-none' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
               <button 
+                onClick={(e) => { e.stopPropagation(); setEditingTask(task); }}
                 className="p-2 text-gray-400 bg-white/5 rounded-lg hover:bg-white/10 hover:text-white transition"
                 title="Modify Task"
               >
@@ -262,6 +265,32 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
                 {countdown > 0 ? `Wait ${countdown}s` : 'Confirm'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 p-4">
+          <div className="bg-surface-900 border border-white/10 p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">Edit Task</h3>
+              <button 
+                onClick={() => setEditingTask(null)}
+                className="text-gray-400 hover:text-white p-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <NewTaskForm 
+              initialData={editingTask}
+              onCancel={() => setEditingTask(null)}
+              onTaskUpdated={(updatedTask) => {
+                setTasks(tasks.map(t => (t._id || t.id) === updatedTask._id ? { ...t, ...updatedTask } : t));
+                setEditingTask(null);
+              }}
+            />
           </div>
         </div>
       )}
