@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import GlassCard from '../layout/GlassCard';
 import NewTaskForm from './NewTaskForm';
 import { IconRenderer } from '../ui/Icons';
@@ -233,7 +234,7 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
       </div>
 
       {/* Friction Modal */}
-      {frictionTask && (
+      {frictionTask && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-surface-900 border border-red-500/20 p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
             <div className="w-12 h-12 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mb-4 mx-auto border border-red-500/20">
@@ -272,13 +273,14 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Edit Task Modal */}
-      {editingTask && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 sm:pt-16 px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-surface-900 border border-white/10 rounded-2xl shadow-2xl max-w-md w-full mx-auto max-h-[75vh] flex flex-col">
+      {editingTask && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 p-4">
+          <div className="bg-surface-900 border border-white/10 rounded-2xl shadow-2xl max-w-md w-full mx-auto max-h-[90vh] flex flex-col">
             {/* Header - Fixed */}
             <div className="flex justify-between items-center p-6 pb-4 border-b border-white/10 shrink-0">
               <h3 className="text-xl font-bold">Edit Task</h3>
@@ -302,7 +304,8 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </GlassCard>
   );
