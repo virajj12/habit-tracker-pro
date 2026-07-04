@@ -39,44 +39,60 @@ export default function useNotifications(habits) {
 
         if (scheduledMins === null) return;
 
-        const storageKey = `notified_${habit._id}_${todayStr}`;
-        const storageValue = localStorage.getItem(storageKey);
-        const expectedScheduledVal = `scheduled_${scheduledMins}`;
+        const notificationTimes = [
+          { mins: scheduledMins - 30, type: 'upcoming' },
+          { mins: scheduledMins, type: 'now' }
+        ];
 
-        if (scheduledMins > currentMins) {
-          // Future time: Schedule using Triggers API if supported
-          if (supportsTriggers && registration && storageValue !== expectedScheduledVal && storageValue !== 'true') {
-            const scheduledDate = new Date();
-            scheduledDate.setHours(Math.floor(scheduledMins / 60), scheduledMins % 60, 0, 0);
-            
-            try {
-              registration.showNotification("Time for your habit!", {
-                body: `It's time to work on: ${habit.name}`,
-                icon: '/favicon.png',
-                tag: `habit_${habit._id}`,
-                showTrigger: new window.TimestampTrigger(scheduledDate.getTime())
-              });
-              localStorage.setItem(storageKey, expectedScheduledVal);
-            } catch (err) {
-              console.error("Failed to schedule notification:", err);
+        notificationTimes.forEach(({ mins, type }) => {
+          if (mins < 0) return; // Ignore negative minutes
+
+          const storageKey = `notified_${habit._id}_${todayStr}_${type}`;
+          const storageValue = localStorage.getItem(storageKey);
+          const expectedScheduledVal = `scheduled_${mins}`;
+
+          const messageBody = type === 'upcoming' 
+            ? `${habit.name} is scheduled in 30 minutes!` 
+            : `It's time to work on: ${habit.name}`;
+
+          if (mins > currentMins) {
+            // Future time: Schedule using Triggers API if supported
+            if (supportsTriggers && registration && storageValue !== expectedScheduledVal && storageValue !== 'true') {
+              const scheduledDate = new Date();
+              scheduledDate.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+              
+              try {
+                registration.showNotification("Habit Reminder", {
+                  body: messageBody,
+                  icon: '/favicon.png',
+                  tag: `habit_${habit._id}_${type}`,
+                  showTrigger: new window.TimestampTrigger(scheduledDate.getTime())
+                });
+                localStorage.setItem(storageKey, expectedScheduledVal);
+              } catch (err) {
+                console.error("Failed to schedule notification:", err);
+              }
             }
-          }
-        } else {
-          // Past or present time: Fire immediate notification if not already fired
-          if (storageValue !== 'true') {
-            // If it was scheduled by SW, assume the OS already fired it. Just mark it as true.
-            if (supportsTriggers && storageValue === expectedScheduledVal) {
-              localStorage.setItem(storageKey, 'true');
-            } else {
-              new Notification("Time for your habit!", {
-                body: `It's time to work on: ${habit.name}`,
-                icon: '/favicon.png',
-                tag: `habit_${habit._id}`
-              });
-              localStorage.setItem(storageKey, 'true');
+          } else if (mins === currentMins || (currentMins > mins && currentMins - mins <= 5)) {
+            // Past or present time within 5 minutes window: Fire immediate notification
+            if (storageValue !== 'true') {
+              // If it was scheduled by SW, assume the OS already fired it. Just mark it as true.
+              if (supportsTriggers && storageValue === expectedScheduledVal) {
+                localStorage.setItem(storageKey, 'true');
+              } else {
+                new Notification("Habit Reminder", {
+                  body: messageBody,
+                  icon: '/favicon.png',
+                  tag: `habit_${habit._id}_${type}`
+                });
+                localStorage.setItem(storageKey, 'true');
+              }
             }
+          } else if (currentMins > mins && storageValue !== 'true') {
+             // Missed by more than 5 mins, silently mark as fired to prevent spam
+             localStorage.setItem(storageKey, 'true');
           }
-        }
+        });
       });
     };
 
