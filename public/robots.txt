@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://habittrackerpro.com/sitemap.xml
