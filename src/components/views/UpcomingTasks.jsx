@@ -56,6 +56,17 @@ export default function UpcomingTasks({ tasks = [] }) {
         }
       }
 
+      // If no upcoming scheduled task, fall back to an anytime task if one exists
+      if (!upcoming) {
+        const anytimeTask = tasks.find(t => 
+          !t.completed && (!t.scheduledTime || t.scheduledTime.timeOption === 'anytime')
+        );
+        if (anytimeTask) {
+          upcoming = anytimeTask;
+          upcoming.isAnytime = true;
+        }
+      }
+
       setCurrentTask(current);
       setNextTask(upcoming);
     };
@@ -67,10 +78,13 @@ export default function UpcomingTasks({ tasks = [] }) {
   }, [tasks]);
 
   const renderTime = (task) => {
-    if (task.scheduledTime.timeOption === 'range') {
+    if (task.isAnytime) {
+      return "Anytime today";
+    }
+    if (task.scheduledTime?.timeOption === 'range') {
       return `${task.scheduledTime.timeRangeStart} - ${task.scheduledTime.timeRangeEnd || '?'}`;
     }
-    return task.scheduledTime.fixedTime;
+    return task.scheduledTime?.fixedTime || '';
   };
 
   return (
