@@ -188,18 +188,28 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
                  <IconRenderer iconName={task.icon || 'star'} className="w-4 h-4" />
               </div>
               
-              {/* Task Name with smooth strikethrough */}
-              <span className={`font-medium text-lg transition-all duration-500 relative
-                ${task.completed 
-                  ? (task.type === 'negative' ? 'text-red-400/50' : 'text-gray-500') 
-                  : 'text-gray-200'}`}
-              >
-                {task.name}
-                <span className={`absolute left-0 top-1/2 h-[2px] transition-all duration-500 -translate-y-1/2
-                  ${task.type === 'negative' ? 'bg-red-500/50' : 'bg-gray-500'}
-                  ${task.completed ? 'w-full' : 'w-0'}`} 
-                />
-              </span>
+              {/* Task Name and Time with smooth strikethrough */}
+              <div className="flex flex-col">
+                <span className={`font-medium text-lg transition-all duration-500 relative w-fit
+                  ${task.completed 
+                    ? (task.type === 'negative' ? 'text-red-400/50' : 'text-gray-500') 
+                    : 'text-gray-200'}`}
+                >
+                  {task.name}
+                  <span className={`absolute left-0 top-1/2 h-[2px] transition-all duration-500 -translate-y-1/2
+                    ${task.type === 'negative' ? 'bg-red-500/50' : 'bg-gray-500'}
+                    ${task.completed ? 'w-full' : 'w-0'}`} 
+                  />
+                </span>
+                
+                {task.scheduledTime && task.scheduledTime.timeOption !== 'anytime' && (
+                  <span className={`text-xs mt-0.5 ${task.completed ? 'text-gray-600' : 'text-gray-400'}`}>
+                    {task.scheduledTime.timeOption === 'fixed' 
+                      ? task.scheduledTime.fixedTime 
+                      : `${task.scheduledTime.timeRangeStart} - ${task.scheduledTime.timeRangeEnd || '?'}`}
+                  </span>
+                )}
+              </div>
             </div>
             
             {/* Action Buttons (Modify/Delete) */}
