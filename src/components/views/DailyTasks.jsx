@@ -202,7 +202,10 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
                   />
                 </span>
                 
-                {task.scheduledTime && task.scheduledTime.timeOption !== 'anytime' && (
+                {task.scheduledTime && (
+                  (task.scheduledTime.timeOption === 'fixed' && task.scheduledTime.fixedTime) ||
+                  (task.scheduledTime.timeOption === 'range' && task.scheduledTime.timeRangeStart)
+                ) && (
                   <span className={`text-xs mt-0.5 ${task.completed ? 'text-gray-600' : 'text-gray-400'}`}>
                     {task.scheduledTime.timeOption === 'fixed' 
                       ? task.scheduledTime.fixedTime 
