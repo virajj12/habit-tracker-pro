@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ICONS, IconRenderer } from '../ui/Icons';
 
 const DAYS_OF_WEEK = [
   { label: 'S', value: 'Sun' },
@@ -17,6 +18,7 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
   };
 
   const [taskName, setTaskName] = useState(initialData?.name || '');
+  const [selectedIcon, setSelectedIcon] = useState(initialData?.icon || 'star');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isDaily, setIsDaily] = useState(initialData?.dateRange ? initialData.dateRange.isDaily : true);
@@ -43,6 +45,7 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
       setTimeRangeStart(initialData.scheduledTime?.timeRangeStart || '');
       setTimeRangeEnd(initialData.scheduledTime?.timeRangeEnd || '');
       setSelectedCategory(initialData.category || 'General');
+      setSelectedIcon(initialData.icon || 'star');
     }
   }, [initialData]);
 
@@ -120,6 +123,7 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
     setIsSubmitting(true);
     const payload = {
       name: taskName,
+      icon: selectedIcon,
       category: selectedCategory,
       habitType: 'positive', 
       dateRange: {
@@ -287,6 +291,28 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
             />
           </div>
         )}
+      </div>
+
+      {/* Icon Selector */}
+      <div>
+        <label className="block text-gray-400 mb-1">Icon</label>
+        <div className="flex flex-wrap gap-2">
+          {Object.keys(ICONS).map((iconName) => (
+            <button
+              key={iconName}
+              type="button"
+              onClick={() => setSelectedIcon(iconName)}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                selectedIcon === iconName
+                  ? 'bg-primary/20 border-primary text-primary border-2 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]'
+                  : 'bg-surface-900/50 border-white/10 text-gray-400 border hover:bg-surface-800 hover:text-white hover:border-white/30'
+              }`}
+              title={iconName}
+            >
+              <IconRenderer iconName={iconName} className="w-5 h-5" />
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Category */}

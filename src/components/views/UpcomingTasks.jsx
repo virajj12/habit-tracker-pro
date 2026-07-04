@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
+import { IconRenderer } from '../ui/Icons';
 
 export default function UpcomingTasks({ tasks = [] }) {
   const [currentTask, setCurrentTask] = useState(null);
@@ -83,7 +84,10 @@ export default function UpcomingTasks({ tasks = [] }) {
           <div className="flex items-start justify-between relative z-10">
             <div>
               <div className="text-xs text-primary font-bold tracking-wider mb-1 uppercase animate-pulse">Right Now</div>
-              <div className="text-xl font-medium text-white">{currentTask ? currentTask.name : 'Free Time!'}</div>
+              <div className="text-xl font-medium text-white flex items-center gap-2">
+                {currentTask && <IconRenderer iconName={currentTask.icon || 'star'} className="w-5 h-5 text-primary" />}
+                {currentTask ? currentTask.name : 'Free Time!'}
+              </div>
             </div>
             {currentTask && (
               <div className="text-sm text-primary font-semibold bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">
@@ -98,7 +102,10 @@ export default function UpcomingTasks({ tasks = [] }) {
           <div className="flex items-start justify-between">
             <div>
               <div className="text-xs text-gray-500 font-bold tracking-wider mb-1 uppercase">Up Next</div>
-              <div className="text-lg font-medium text-gray-200">{nextTask ? nextTask.name : 'No more tasks today!'}</div>
+              <div className="text-lg font-medium text-gray-200 flex items-center gap-2">
+                {nextTask && <IconRenderer iconName={nextTask.icon || 'star'} className="w-4 h-4 text-secondary" />}
+                {nextTask ? nextTask.name : 'No more tasks today!'}
+              </div>
             </div>
             {nextTask && (
               <div className="text-sm text-secondary font-semibold bg-secondary/10 px-3 py-1 rounded-lg border border-secondary/20">
