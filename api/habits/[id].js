@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
 import dbConnect from '../../_utils/dbConnect.js';
 import Habit from '../../_models/Habit.js';
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
     const token = cookies.auth_token;
     if (!token) throw new Error('Not authenticated');
     
-    const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET || 'fallback_secret_antigravity');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_antigravity');
     userId = decoded.userId;
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
