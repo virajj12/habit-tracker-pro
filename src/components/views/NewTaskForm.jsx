@@ -21,6 +21,7 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
   const [selectedIcon, setSelectedIcon] = useState(initialData?.icon || 'star');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showNoChanges, setShowNoChanges] = useState(false);
   const [isDaily, setIsDaily] = useState(initialData?.dateRange ? initialData.dateRange.isDaily : true);
   const [startDate, setStartDate] = useState(initialData?.dateRange?.startDate ? formatDate(initialData.dateRange.startDate) : '');
   const [endDate, setEndDate] = useState(initialData?.dateRange?.endDate ? formatDate(initialData.dateRange.endDate) : '');
@@ -120,6 +121,29 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
     e.preventDefault();
     if (!taskName.trim()) return;
 
+    const isEditing = !!initialData;
+    
+    if (isEditing) {
+      const hasChanges = 
+        taskName !== (initialData.name || '') ||
+        selectedIcon !== (initialData.icon || 'star') ||
+        selectedCategory !== (initialData.category || 'General') ||
+        isDaily !== (initialData.dateRange ? initialData.dateRange.isDaily : true) ||
+        startDate !== (initialData.dateRange?.startDate ? formatDate(initialData.dateRange.startDate) : '') ||
+        endDate !== (initialData.dateRange?.endDate ? formatDate(initialData.dateRange.endDate) : '') ||
+        JSON.stringify(skipDays) !== JSON.stringify(initialData.skipDays || []) ||
+        timeOption !== (initialData.scheduledTime?.timeOption || 'any') ||
+        fixedTime !== (initialData.scheduledTime?.fixedTime || '') ||
+        timeRangeStart !== (initialData.scheduledTime?.timeRangeStart || '') ||
+        timeRangeEnd !== (initialData.scheduledTime?.timeRangeEnd || '');
+
+      if (!hasChanges) {
+        setShowNoChanges(true);
+        setTimeout(() => setShowNoChanges(false), 1500);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     const payload = {
       name: taskName,
@@ -141,7 +165,6 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
     };
     
     try {
-      const isEditing = !!initialData;
       const url = isEditing ? `/api/habits/${initialData._id}` : '/api/habits';
       const method = isEditing ? 'PUT' : 'POST';
 
@@ -153,18 +176,19 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
       const data = await res.json();
       
       if (data.success) {
-        if (isEditing && onTaskUpdated) {
-          onTaskUpdated(data.data);
-        } else if (!isEditing && onTaskAdded) {
-          onTaskAdded(data.data);
-        }
-        
         setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 2000);
         
-        if (!isEditing) {
+        if (!isEditing && onTaskAdded) {
+          onTaskAdded(data.data);
           setTaskName('');
         }
+        
+        setTimeout(() => {
+          setShowSuccess(false);
+          if (isEditing && onTaskUpdated) {
+            onTaskUpdated(data.data);
+          }
+        }, 1000);
       }
     } catch (err) {
       console.error(err);
@@ -369,10 +393,12 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
         )}
         <button 
           type="submit" 
-          disabled={isSubmitting || showSuccess || !taskName.trim()}
+          disabled={isSubmitting || showSuccess || showNoChanges || !taskName.trim()}
           className={`${onCancel ? 'w-2/3' : 'w-full'} font-medium py-2.5 rounded-lg transition-all shadow-lg flex justify-center items-center gap-2
             ${showSuccess 
               ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+              : showNoChanges
+                ? 'bg-gray-500 text-white shadow-gray-500/20'
               : !taskName.trim()
                 ? 'bg-surface-800 text-gray-500 cursor-not-allowed border border-white/5'
                 : 'bg-primary hover:bg-primary/80 text-white shadow-primary/20'
@@ -389,7 +415,10 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
           {showSuccess && (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
           )}
-          {showSuccess ? (initialData ? 'Saved!' : 'Task Added!') : isSubmitting ? (initialData ? 'Saving...' : 'Adding...') : (initialData ? 'Save Changes' : 'Add Task')}
+          {showNoChanges && (
+             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          )}
+          {showSuccess ? (initialData ? 'Saved!' : 'Task Added!') : showNoChanges ? 'No changes' : isSubmitting ? (initialData ? 'Saving...' : 'Adding...') : (initialData ? 'Save Changes' : 'Add Task')}
         </button>
       </div>
     </form>
