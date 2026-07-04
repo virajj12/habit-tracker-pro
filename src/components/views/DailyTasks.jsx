@@ -277,26 +277,30 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
 
       {/* Edit Task Modal */}
       {editingTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 p-4">
-          <div className="bg-surface-900 border border-white/10 p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 p-4 sm:p-6">
+          <div className="bg-surface-900 border border-white/10 rounded-2xl shadow-2xl max-w-md w-full mx-auto max-h-[85vh] flex flex-col">
+            {/* Header - Fixed */}
+            <div className="flex justify-between items-center p-6 pb-4 border-b border-white/10 shrink-0">
               <h3 className="text-xl font-bold">Edit Task</h3>
               <button 
                 onClick={() => setEditingTask(null)}
-                className="text-gray-400 hover:text-white p-2"
+                className="text-gray-400 hover:text-white p-2 rounded-lg transition-colors hover:bg-white/5"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
             
-            <NewTaskForm 
-              initialData={editingTask}
-              onCancel={() => setEditingTask(null)}
-              onTaskUpdated={(updatedTask) => {
-                setTasks(tasks.map(t => (t._id || t.id) === updatedTask._id ? { ...t, ...updatedTask } : t));
-                setEditingTask(null);
-              }}
-            />
+            {/* Body - Scrollable */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              <NewTaskForm 
+                initialData={editingTask}
+                onCancel={() => setEditingTask(null)}
+                onTaskUpdated={(updatedTask) => {
+                  setTasks(tasks.map(t => (t._id || t.id) === updatedTask._id ? { ...t, ...updatedTask } : t));
+                  setEditingTask(null);
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
