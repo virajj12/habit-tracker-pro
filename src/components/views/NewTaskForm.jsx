@@ -201,8 +201,10 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-sm">
       {/* Task Name */}
       <div>
-        <label className="block text-gray-400 mb-1">Task Name</label>
+        <label htmlFor="taskName" className="block text-gray-400 mb-1">Task Name</label>
         <input 
+          id="taskName"
+          name="taskName"
           type="text" 
           value={taskName}
           onChange={(e) => setTaskName(e.target.value)}
@@ -236,14 +238,20 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
         {!isDaily && (
           <div className="flex gap-3 mt-2">
             <input 
+              id="startDate"
+              name="startDate"
               type="date" 
+              aria-label="Start Date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="w-full bg-surface-900/50 border border-white/10 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-primary transition-colors"
             />
             <span className="text-gray-500 self-center">to</span>
             <input 
+              id="endDate"
+              name="endDate"
               type="date" 
+              aria-label="End Date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full bg-surface-900/50 border border-white/10 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-primary transition-colors"
@@ -278,8 +286,10 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
 
       {/* Schedule */}
       <div>
-        <label className="block text-gray-400 mb-1">Schedule <span className="text-xs text-gray-600">(Optional)</span></label>
+        <label htmlFor="timeOption" className="block text-gray-400 mb-1">Schedule <span className="text-xs text-gray-600">(Optional)</span></label>
         <select 
+          id="timeOption"
+          name="timeOption"
           value={timeOption}
           onChange={(e) => setTimeOption(e.target.value)}
           className="w-full bg-surface-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer mb-2"
@@ -291,7 +301,10 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
         
         {timeOption === 'fixed' && (
           <input 
+            id="fixedTime"
+            name="fixedTime"
             type="time" 
+            aria-label="Fixed Time"
             value={fixedTime}
             onChange={(e) => setFixedTime(e.target.value)}
             className="w-full bg-surface-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
@@ -301,14 +314,20 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
         {timeOption === 'range' && (
           <div className="flex gap-3">
             <input 
+              id="timeRangeStart"
+              name="timeRangeStart"
               type="time" 
+              aria-label="Time Range Start"
               value={timeRangeStart}
               onChange={(e) => setTimeRangeStart(e.target.value)}
               className="w-full bg-surface-900/50 border border-white/10 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-primary transition-colors"
             />
             <span className="text-gray-500 self-center">to</span>
             <input 
+              id="timeRangeEnd"
+              name="timeRangeEnd"
               type="time" 
+              aria-label="Time Range End"
               value={timeRangeEnd}
               onChange={(e) => setTimeRangeEnd(e.target.value)}
               className="w-full bg-surface-900/50 border border-white/10 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-primary transition-colors"
@@ -341,9 +360,11 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
 
       {/* Category */}
       <div>
-        <label className="block text-gray-400 mb-1">Category</label>
+        <label htmlFor="selectedCategory" className="block text-gray-400 mb-1">Category</label>
         {!isCreatingCategory ? (
           <select 
+            id="selectedCategory"
+            name="selectedCategory"
             value={selectedCategory}
             onChange={handleCategoryChange}
             className="w-full bg-surface-900/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors appearance-none cursor-pointer"
@@ -356,7 +377,10 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
         ) : (
           <div className="flex gap-2">
             <input 
+              id="newCategoryName"
+              name="newCategoryName"
               type="text" 
+              aria-label="New Category Name"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               placeholder="New Category Name"
