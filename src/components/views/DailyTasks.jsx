@@ -277,8 +277,8 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
 
       {/* Edit Task Modal */}
       {editingTask && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 p-4 pt-10 sm:p-6 sm:pt-12">
-          <div className="bg-surface-900 border border-white/10 rounded-2xl shadow-2xl max-w-md w-full mx-auto max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200 p-4">
+          <div className="bg-surface-900 border border-white/10 rounded-2xl shadow-2xl max-w-md w-full mx-auto max-h-[90vh] flex flex-col">
             {/* Header - Fixed */}
             <div className="flex justify-between items-center p-6 pb-4 border-b border-white/10 shrink-0">
               <h3 className="text-xl font-bold">Edit Task</h3>
