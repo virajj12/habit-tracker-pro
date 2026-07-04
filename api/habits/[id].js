@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
-import dbConnect from '../../_utils/dbConnect.js';
-import Habit from '../../_models/Habit.js';
-import HabitLog from '../../_models/HabitLog.js';
+import dbConnect from '../_utils/dbConnect.js';
+import Habit from '../_models/Habit.js';
+import HabitLog from '../_models/HabitLog.js';
 
 export default async function handler(req, res) {
   const {
