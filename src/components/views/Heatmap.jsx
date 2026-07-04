@@ -159,6 +159,9 @@ export default function Heatmap({ user }) {
 
           <div className="relative">
             <select 
+              id="rangeOption"
+              name="rangeOption"
+              aria-label="Time Range"
               value={rangeOption}
               onChange={(e) => setRangeOption(e.target.value)}
               className="appearance-none bg-surface-900/50 border border-white/10 text-sm rounded-lg px-4 py-2 pr-8 focus:outline-none focus:border-primary transition-colors cursor-pointer text-gray-300 hover:text-white"

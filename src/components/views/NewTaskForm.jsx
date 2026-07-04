@@ -216,7 +216,7 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
       {/* Date Range Configuration */}
       <div>
         <div className="flex justify-between items-center mb-1">
-          <label className="block text-gray-400">Date Range</label>
+          <span className="block text-gray-400">Date Range</span>
           <div className="flex bg-surface-900/50 rounded-lg border border-white/10 overflow-hidden">
             <button
               type="button"
@@ -262,7 +262,7 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
 
       {/* Skip Days */}
       <div>
-        <label className="block text-gray-400 mb-1">Skip Days <span className="text-xs text-gray-600">(Optional)</span></label>
+        <span className="block text-gray-400 mb-1">Skip Days <span className="text-xs text-gray-600">(Optional)</span></span>
         <div className="flex justify-between gap-1">
           {DAYS_OF_WEEK.map((day) => {
             const isSkipped = skipDays.includes(day.value);
@@ -338,7 +338,7 @@ export default function NewTaskForm({ onTaskAdded, initialData, onTaskUpdated, o
 
       {/* Icon Selector */}
       <div>
-        <label className="block text-gray-400 mb-1">Icon</label>
+        <span className="block text-gray-400 mb-1">Icon</span>
         <div className="flex flex-wrap gap-2">
           {Object.keys(ICONS).map((iconName) => (
             <button
