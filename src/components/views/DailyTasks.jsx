@@ -141,9 +141,12 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
     }
   };
 
-  const currentDay = new Date().getDay();
-  const todaysTasks = tasks.filter(task => !task.skipDays || !task.skipDays.includes(currentDay));
-  const restOfTasks = tasks.filter(task => task.skipDays && task.skipDays.includes(currentDay));
+  const currentDayNum = new Date().getDay();
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const currentDayStr = dayNames[currentDayNum];
+
+  const todaysTasks = tasks.filter(task => !task.skipDays || !task.skipDays.includes(currentDayStr));
+  const restOfTasks = tasks.filter(task => task.skipDays && task.skipDays.includes(currentDayStr));
 
   const renderTask = (task) => {
     const taskId = task._id || task.id;
