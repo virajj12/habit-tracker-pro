@@ -141,110 +141,125 @@ export default function DailyTasks({ tasks, setTasks, onTaskComplete }) {
     }
   };
 
+  const currentDay = new Date().getDay();
+  const todaysTasks = tasks.filter(task => !task.skipDays || !task.skipDays.includes(currentDay));
+  const restOfTasks = tasks.filter(task => task.skipDays && task.skipDays.includes(currentDay));
+
+  const renderTask = (task) => {
+    const taskId = task._id || task.id;
+    let isLocked = false;
+    if (task.dependsOn) {
+      const parentTask = tasks.find(t => (t._id || t.id) === task.dependsOn);
+      if (parentTask && !parentTask.completed) {
+        isLocked = true;
+      }
+    }
+
+    return (
+      <div 
+        key={taskId} 
+        className={`group p-4 rounded-xl border transition-all duration-500 flex items-center justify-between
+          ${task.completed 
+            ? 'bg-surface-800/10 border-white/5 opacity-50' 
+            : isLocked
+              ? 'bg-surface-900/30 border-white/5 opacity-40 grayscale pointer-events-none'
+              : 'bg-surface-800/30 hover:bg-surface-800/60 border-white/10'}`}
+      >
+        <div className={`flex items-center gap-4 flex-1 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => toggleTask(taskId)}>
+          {/* Custom Checkbox */}
+          <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors duration-300 relative
+            ${task.completed 
+               ? (task.type === 'negative' ? 'bg-red-500/80 border-red-500' : 'bg-primary border-primary') 
+               : 'bg-surface-900/50 border-white/20 group-hover:border-primary/50'}`}>
+            {task.completed && (
+              <svg className="w-4 h-4 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            {isLocked && !task.completed && (
+               <svg className="w-3.5 h-3.5 text-gray-500 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+               </svg>
+            )}
+          </div>
+          
+          {/* Task Icon */}
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-surface-900/50 border border-white/10 ${task.completed ? 'opacity-50 grayscale text-gray-500' : 'text-primary shadow-[0_0_10px_rgba(var(--color-primary),0.2)]'}`}>
+             <IconRenderer iconName={task.icon || 'star'} className="w-4 h-4" />
+          </div>
+          
+          {/* Task Name and Time with smooth strikethrough */}
+          <div className="flex flex-col">
+            <span className={`font-medium text-lg transition-all duration-500 relative w-fit
+              ${task.completed 
+                ? (task.type === 'negative' ? 'text-red-400/50' : 'text-gray-500') 
+                : 'text-gray-200'}`}
+            >
+              {task.name}
+              <span className={`absolute left-0 top-1/2 h-[2px] transition-all duration-500 -translate-y-1/2
+                ${task.type === 'negative' ? 'bg-red-500/50' : 'bg-gray-500'}
+                ${task.completed ? 'w-full' : 'w-0'}`} 
+              />
+            </span>
+            
+            {task.scheduledTime && (
+              (task.scheduledTime.timeOption === 'fixed' && task.scheduledTime.fixedTime) ||
+              (task.scheduledTime.timeOption === 'range' && task.scheduledTime.timeRangeStart)
+            ) && (
+              <span className={`text-xs mt-0.5 ${task.completed ? 'text-gray-600' : 'text-gray-400'}`}>
+                {task.scheduledTime.timeOption === 'fixed' 
+                  ? task.scheduledTime.fixedTime 
+                  : `${task.scheduledTime.timeRangeStart} - ${task.scheduledTime.timeRangeEnd || '?'}`}
+              </span>
+            )}
+          </div>
+        </div>
+        
+        {/* Action Buttons (Modify/Delete) */}
+        <div className={`flex gap-2 transition-opacity duration-300 ${task.completed || isLocked ? 'opacity-0 pointer-events-none' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setEditingTask(task); }}
+            className="p-2 text-gray-400 bg-white/5 rounded-lg hover:bg-white/10 hover:text-white transition"
+            title="Modify Task"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); deleteTask(taskId); }}
+            className="p-2 text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 hover:text-red-300 transition"
+            title="Delete Task"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <GlassCard className="lg:col-span-3">
       <h2 className="text-lg font-semibold mb-4">Today's Tasks</h2>
       <div className="flex flex-col gap-3">
-        {tasks.map((task) => {
-          const taskId = task._id || task.id;
-          let isLocked = false;
-          if (task.dependsOn) {
-            const parentTask = tasks.find(t => (t._id || t.id) === task.dependsOn);
-            if (parentTask && !parentTask.completed) {
-              isLocked = true;
-            }
-          }
-
-          return (
-          <div 
-            key={taskId} 
-            className={`group p-4 rounded-xl border transition-all duration-500 flex items-center justify-between
-              ${task.completed 
-                ? 'bg-surface-800/10 border-white/5 opacity-50' 
-                : isLocked
-                  ? 'bg-surface-900/30 border-white/5 opacity-40 grayscale pointer-events-none'
-                  : 'bg-surface-800/30 hover:bg-surface-800/60 border-white/10'}`}
-          >
-            <div className={`flex items-center gap-4 flex-1 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => toggleTask(taskId)}>
-              {/* Custom Checkbox */}
-              <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-colors duration-300 relative
-                ${task.completed 
-                   ? (task.type === 'negative' ? 'bg-red-500/80 border-red-500' : 'bg-primary border-primary') 
-                   : 'bg-surface-900/50 border-white/20 group-hover:border-primary/50'}`}>
-                {task.completed && (
-                  <svg className="w-4 h-4 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-                {isLocked && !task.completed && (
-                   <svg className="w-3.5 h-3.5 text-gray-500 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                   </svg>
-                )}
-              </div>
-              
-              {/* Task Icon */}
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-surface-900/50 border border-white/10 ${task.completed ? 'opacity-50 grayscale text-gray-500' : 'text-primary shadow-[0_0_10px_rgba(var(--color-primary),0.2)]'}`}>
-                 <IconRenderer iconName={task.icon || 'star'} className="w-4 h-4" />
-              </div>
-              
-              {/* Task Name and Time with smooth strikethrough */}
-              <div className="flex flex-col">
-                <span className={`font-medium text-lg transition-all duration-500 relative w-fit
-                  ${task.completed 
-                    ? (task.type === 'negative' ? 'text-red-400/50' : 'text-gray-500') 
-                    : 'text-gray-200'}`}
-                >
-                  {task.name}
-                  <span className={`absolute left-0 top-1/2 h-[2px] transition-all duration-500 -translate-y-1/2
-                    ${task.type === 'negative' ? 'bg-red-500/50' : 'bg-gray-500'}
-                    ${task.completed ? 'w-full' : 'w-0'}`} 
-                  />
-                </span>
-                
-                {task.scheduledTime && (
-                  (task.scheduledTime.timeOption === 'fixed' && task.scheduledTime.fixedTime) ||
-                  (task.scheduledTime.timeOption === 'range' && task.scheduledTime.timeRangeStart)
-                ) && (
-                  <span className={`text-xs mt-0.5 ${task.completed ? 'text-gray-600' : 'text-gray-400'}`}>
-                    {task.scheduledTime.timeOption === 'fixed' 
-                      ? task.scheduledTime.fixedTime 
-                      : `${task.scheduledTime.timeRangeStart} - ${task.scheduledTime.timeRangeEnd || '?'}`}
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            {/* Action Buttons (Modify/Delete) */}
-            <div className={`flex gap-2 transition-opacity duration-300 ${task.completed || isLocked ? 'opacity-0 pointer-events-none' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
-              <button 
-                onClick={(e) => { e.stopPropagation(); setEditingTask(task); }}
-                className="p-2 text-gray-400 bg-white/5 rounded-lg hover:bg-white/10 hover:text-white transition"
-                title="Modify Task"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); deleteTask(taskId); }}
-                className="p-2 text-red-400 bg-red-500/10 rounded-lg hover:bg-red-500/20 hover:text-red-300 transition"
-                title="Delete Task"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )
-      })}
-        {tasks.length === 0 && (
+        {todaysTasks.map(renderTask)}
+        {todaysTasks.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No tasks for today. You're all caught up!
           </div>
         )}
       </div>
+
+      {restOfTasks.length > 0 && (
+        <>
+          <h2 className="text-lg font-semibold mt-8 mb-4 text-gray-400">Rest of the Tasks</h2>
+          <div className="flex flex-col gap-3 opacity-60">
+            {restOfTasks.map(renderTask)}
+          </div>
+        </>
+      )}
 
       {/* Friction Modal */}
       {frictionTask && createPortal(
