@@ -13,6 +13,7 @@ export default function DashboardView() {
     habitDistribution: []
   });
   const [history, setHistory] = useState([]);
+  const [historyView, setHistoryView] = useState('timeline'); // 'timeline' | 'grid'
 
   useEffect(() => {
     fetch('/api/analytics')
@@ -33,6 +34,36 @@ export default function DashboardView() {
       })
       .catch(err => console.error("Error fetching history:", err));
   }, []);
+
+  // Compute Grid Data
+  const getGridData = () => {
+    const today = new Date();
+    const last7Days = Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (6 - i));
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return { dateStr: `${year}-${month}-${day}`, dateObj: d };
+    });
+
+    const habitsMap = new Map();
+    history.forEach(log => {
+      if (!log.habitId || !log.habitId._id) return;
+      const hId = log.habitId._id.toString();
+      if (!habitsMap.has(hId)) {
+        habitsMap.set(hId, {
+          habit: log.habitId,
+          completions: new Set()
+        });
+      }
+      habitsMap.get(hId).completions.add(log.dateString);
+    });
+
+    return { last7Days, habits: Array.from(habitsMap.values()) };
+  };
+
+  const gridData = historyView === 'grid' ? getGridData() : null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-500">
@@ -109,43 +140,99 @@ export default function DashboardView() {
 
       {/* Completion History */}
       <GlassCard className="lg:col-span-2 flex flex-col">
-        <h3 className="text-lg font-medium mb-4">Completion History</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Completion History</h3>
+          <div className="flex bg-surface-900/50 p-1 rounded-lg border border-white/5">
+            <button 
+              onClick={() => setHistoryView('timeline')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${historyView === 'timeline' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              Timeline
+            </button>
+            <button 
+              onClick={() => setHistoryView('grid')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${historyView === 'grid' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              7-Day Grid
+            </button>
+          </div>
+        </div>
         <div className="flex-1 overflow-x-auto">
           {history.length > 0 ? (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 text-gray-400 text-sm">
-                  <th className="pb-3 px-4 font-medium">Habit</th>
-                  <th className="pb-3 px-4 font-medium">Category</th>
-                  <th className="pb-3 px-4 font-medium">Date</th>
-                  <th className="pb-3 px-4 font-medium">Time</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {history.map((log) => {
-                  const d = new Date(log.loggedAt);
-                  const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                  const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                  const habit = log.habitId || { name: 'Unknown', icon: '❓', category: 'General' };
+            historyView === 'timeline' ? (
+              <table className="w-full text-left border-collapse min-w-[500px]">
+                <thead>
+                  <tr className="border-b border-white/10 text-gray-400 text-sm">
+                    <th className="pb-3 px-4 font-medium">Habit</th>
+                    <th className="pb-3 px-4 font-medium">Category</th>
+                    <th className="pb-3 px-4 font-medium">Date</th>
+                    <th className="pb-3 px-4 font-medium">Time</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {history.map((log) => {
+                    const d = new Date(log.loggedAt);
+                    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                    const habit = log.habitId || { name: 'Unknown', icon: '❓', category: 'General' };
 
-                  return (
-                    <tr key={log._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    return (
+                      <tr key={log._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="py-4 px-4 flex items-center gap-3">
+                          <span className="text-xl">{habit.icon}</span>
+                          <span className="font-medium text-white">{habit.name}</span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-white/10 text-gray-300">
+                            {habit.category}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-gray-300">{dateStr}</td>
+                        <td className="py-4 px-4 text-gray-400">{timeStr}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-white/10 text-gray-400 text-sm">
+                    <th className="pb-3 px-4 font-medium">Habit</th>
+                    {gridData.last7Days.map(d => (
+                      <th key={d.dateStr} className="pb-3 px-2 font-medium text-center">
+                        <div>{d.dateObj.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                        <div className="text-xs opacity-60">{d.dateObj.getDate()}</div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {gridData.habits.map(({ habit, completions }) => (
+                    <tr key={habit._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="py-4 px-4 flex items-center gap-3">
                         <span className="text-xl">{habit.icon}</span>
                         <span className="font-medium text-white">{habit.name}</span>
                       </td>
-                      <td className="py-4 px-4">
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-white/10 text-gray-300">
-                          {habit.category}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-gray-300">{dateStr}</td>
-                      <td className="py-4 px-4 text-gray-400">{timeStr}</td>
+                      {gridData.last7Days.map(d => {
+                        const isDone = completions.has(d.dateStr);
+                        return (
+                          <td key={d.dateStr} className="py-4 px-2">
+                            {isDone ? (
+                              <div className="w-7 h-7 mx-auto rounded-full bg-green-500/20 text-green-400 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                              </div>
+                            ) : (
+                              <div className="w-7 h-7 mx-auto rounded-full bg-white/5 border border-white/10 text-white/20 flex items-center justify-center text-xs font-bold">-</div>
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            )
           ) : (
             <div className="text-center text-white/40 py-8">No tasks completed yet. Go crush some habits!</div>
           )}
