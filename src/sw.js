@@ -1,4 +1,8 @@
 import { precacheAndRoute } from 'workbox-precaching';
+import { clientsClaim } from 'workbox-core';
+
+self.skipWaiting();
+clientsClaim();
 
 // Inject precache manifest from Vite
 precacheAndRoute(self.__WB_MANIFEST || []);
