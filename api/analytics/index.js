@@ -1,5 +1,6 @@
 import dbConnect from '../_utils/dbConnect.js';
 import HabitLog from '../_models/HabitLog.js';
+import Habit from '../_models/Habit.js';
 import jwt from 'jsonwebtoken';
 import * as cookie from 'cookie';
 
@@ -36,31 +37,53 @@ export default async function handler(req, res) {
     // If no logs, rate is 0. If there are logs, it's completed / total logs.
     const completionRate = recentLogs.length > 0 ? Math.round((recentCompleted / recentLogs.length) * 100) : 0;
 
-    // 3. Current Streak (Days in a row with at least 1 completed task)
-    // Get all unique dates with a completion, sorted descending
-    const completedDates = await HabitLog.distinct('dateString', { userId, status: 'completed' });
-    completedDates.sort((a, b) => new Date(b) - new Date(a));
-
+    // 3. Current Streak (Highest streak out of all individual tasks, ignoring their skip days)
+    const habits = await Habit.find({ userId });
+    const completedLogs = await HabitLog.find({ userId, status: 'completed' });
+    
+    // Group completed logs by habitId
+    const logsByHabit = {};
+    for (const log of completedLogs) {
+      const hId = log.habitId.toString();
+      if (!logsByHabit[hId]) logsByHabit[hId] = [];
+      logsByHabit[hId].push(log.dateString);
+    }
+    
     let currentStreak = 0;
     const today = new Date();
     const todayStr = today.toLocaleDateString('en-CA');
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
-    let expectedDateStr = todayStr;
-    let expectedDate = new Date(today);
-
-    // If they haven't done anything today yet, the streak could still be active from yesterday
-    if (completedDates.length > 0 && completedDates[0] !== todayStr) {
-      expectedDate.setDate(expectedDate.getDate() - 1);
-      expectedDateStr = expectedDate.toLocaleDateString('en-CA');
-    }
-
-    for (let dateStr of completedDates) {
-      if (dateStr === expectedDateStr) {
-        currentStreak++;
+    for (const habit of habits) {
+      const hId = habit._id.toString();
+      const skipDays = habit.skipDays || [];
+      const datesCompleted = logsByHabit[hId] || [];
+      const datesCompletedSet = new Set(datesCompleted);
+      
+      let habitStreak = 0;
+      let expectedDate = new Date(today);
+      
+      // Look back up to 5 years to find the streak
+      for (let i = 0; i < 1825; i++) {
+        const dStr = expectedDate.toLocaleDateString('en-CA');
+        const dayName = dayNames[expectedDate.getDay()];
+        
+        if (datesCompletedSet.has(dStr)) {
+          habitStreak++;
+        } else if (skipDays.includes(dayName)) {
+          // It's a skip day and not completed, so don't break the streak
+        } else if (dStr === todayStr) {
+          // Today is not completed and not a skip day. Allow streak to continue from yesterday.
+        } else {
+          // Not completed, not a skip day, not today -> streak breaks
+          break;
+        }
+        
         expectedDate.setDate(expectedDate.getDate() - 1);
-        expectedDateStr = expectedDate.toLocaleDateString('en-CA');
-      } else {
-        break;
+      }
+      
+      if (habitStreak > currentStreak) {
+        currentStreak = habitStreak;
       }
     }
 
