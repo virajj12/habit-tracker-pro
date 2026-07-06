@@ -86,13 +86,41 @@ export default async function handler(req, res) {
         currentStreak = habitStreak;
       }
     }
+    // 4. Weekly Progress
+    const weeklyProgress = [];
+    for (let i = 6; i >= 0; i--) {
+      let progressDate = new Date();
+      progressDate.setDate(progressDate.getDate() - i);
+      const dStr = progressDate.toLocaleDateString('en-CA');
+      
+      const completedOnDate = completedLogs.filter(log => log.dateString === dStr).length;
+      weeklyProgress.push({
+        date: progressDate.toLocaleDateString('en-US', { weekday: 'short' }),
+        completed: completedOnDate
+      });
+    }
+
+    // 5. Habit Distribution
+    const categoryCounts = {};
+    for (const habit of habits) {
+      if (habit.isVisible !== false) {
+        const cat = habit.category || 'General';
+        categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+      }
+    }
+    const habitDistribution = Object.keys(categoryCounts).map(key => ({
+      name: key,
+      value: categoryCounts[key]
+    }));
 
     res.status(200).json({
       success: true,
       data: {
         totalTasksDone,
         completionRate,
-        currentStreak
+        currentStreak,
+        weeklyProgress,
+        habitDistribution
       }
     });
 

@@ -28,6 +28,10 @@ const UserSchema = new mongoose.Schema({
   },
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  pushSubscriptions: {
+    type: Array,
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
