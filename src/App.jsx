@@ -150,22 +150,22 @@ function App() {
               
               {/* View Routing */}
               <main 
-                className="mt-4 relative overflow-x-hidden touch-pan-y w-full"
+                className="mt-4 relative overflow-hidden touch-pan-y w-full"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
               >
                 <div 
-                  className="flex w-full h-full"
+                  className="flex w-[200%] h-full"
                   style={{ 
-                    transform: `translateX(calc(${currentView === 'home' ? '0%' : '-100%'} + ${dragOffset}px))`,
+                    transform: `translateX(calc(${currentView === 'home' ? '0%' : '-50%'} + ${dragOffset}px))`,
                     transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
                   }}
                 >
-                  <div className="w-full shrink-0 min-w-0 max-w-full overflow-x-hidden">
+                  <div className="w-1/2 shrink-0 overflow-x-hidden px-1">
                     <HomeView user={user} />
                   </div>
-                  <div className="w-full shrink-0 min-w-0 max-w-full overflow-x-hidden">
+                  <div className="w-1/2 shrink-0 overflow-x-hidden px-1">
                     <DashboardView user={user} />
                   </div>
                 </div>
