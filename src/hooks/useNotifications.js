@@ -29,14 +29,30 @@ export default function useNotifications(habits) {
         const registration = await navigator.serviceWorker.ready;
         let subscription = await registration.pushManager.getSubscription();
         
+        // Use the environment variable, but ensure any accidental quotes are stripped
+        let rawKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || import.meta.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BJThL_CcaZt7pAnPpHkRGQ4IDJXehD-H244faEvvHvV5drsIRS0npf8Qu1K2WnIV1TaNee1MFwQCUaXcvQffztg";
+        const publicVapidKey = rawKey.replace(/^["']|["']$/g, '');
+        
         if (!subscription) {
-          // Fallback to the generated key if env variable is missing
-          const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || import.meta.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BJThL_CcaZt7pAnPpHkRGQ4IDJXehD-H244faEvvHvV5drsIRS0npf8Qu1K2WnIV1TaNee1MFwQCUaXcvQffztg";
-          
-          subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
-          });
+          try {
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+            });
+          } catch (subscribeErr) {
+            console.error('PushManager subscribe failed:', subscribeErr);
+            if (subscribeErr.name === 'AbortError' || subscribeErr.message.includes('push service error')) {
+              console.warn('Unregistering service worker to clear corrupted push state. Please reload the page.');
+              await registration.unregister();
+              // Force a reload to get a fresh service worker and subscription attempt
+              window.location.reload();
+            }
+            return; // Stop execution
+          }
+        } else {
+          // If a subscription exists, it might be tied to an old key. 
+          // PushManager doesn't easily let us read the old key to compare, 
+          // so if backend fails to send notifications, the user would need to clear site data.
         }
         
         await fetch('/api/notifications/subscribe', {
