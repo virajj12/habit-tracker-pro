@@ -140,7 +140,7 @@ export default function DashboardView() {
       </GlassCard>
 
       {/* Completion History */}
-      <GlassCard className="lg:col-span-2 flex flex-col">
+      <GlassCard className="lg:col-span-2 flex flex-col min-w-0">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">Completion History</h3>
           <div className="flex bg-surface-900/50 p-1 rounded-lg border border-white/5">

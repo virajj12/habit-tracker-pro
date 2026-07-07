@@ -122,7 +122,7 @@ function App() {
               
               {/* View Routing */}
               <main 
-                className="mt-4 relative overflow-hidden touch-pan-y w-full"
+                className="mt-4 relative overflow-x-hidden touch-pan-y w-full"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
@@ -134,10 +134,10 @@ function App() {
                     transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
                   }}
                 >
-                  <div className="w-full shrink-0">
+                  <div className="w-full shrink-0 min-w-0 max-w-full overflow-x-hidden">
                     <HomeView user={user} />
                   </div>
-                  <div className="w-full shrink-0">
+                  <div className="w-full shrink-0 min-w-0 max-w-full overflow-x-hidden">
                     <DashboardView user={user} />
                   </div>
                 </div>
