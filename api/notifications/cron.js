@@ -4,11 +4,19 @@ import Habit from '../_models/Habit.js';
 import HabitLog from '../_models/HabitLog.js';
 import webpush from 'web-push';
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:admin@example.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  try {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || 'mailto:admin@example.com',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY
+    );
+  } catch (err) {
+    console.error('Failed to set VAPID details:', err);
+  }
+} else {
+  console.warn('VAPID keys not provided, push notifications will not work in cron.');
+}
 
 export default async function handler(req, res) {
   // Only allow GET/POST for the cron ping

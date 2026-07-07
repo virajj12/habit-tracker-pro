@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GlassCard from '../layout/GlassCard';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { IconRenderer } from '../ui/Icons';
 
 const COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899'];
 
@@ -179,7 +180,9 @@ export default function DashboardView() {
                     return (
                       <tr key={log._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td className="py-4 px-4 flex items-center gap-3">
-                          <span className="text-xl">{habit.icon}</span>
+                          <div className="p-2 rounded-xl bg-surface-800 text-primary border border-white/5">
+                            <IconRenderer iconName={habit.icon || 'star'} className="w-5 h-5" />
+                          </div>
                           <span className="font-medium text-white">{habit.name}</span>
                         </td>
                         <td className="py-4 px-4">
@@ -211,7 +214,9 @@ export default function DashboardView() {
                   {gridData.habits.map(({ habit, completions }) => (
                     <tr key={habit._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="py-4 px-4 flex items-center gap-3">
-                        <span className="text-xl">{habit.icon}</span>
+                        <div className="p-2 rounded-xl bg-surface-800 text-primary border border-white/5">
+                          <IconRenderer iconName={habit.icon || 'star'} className="w-5 h-5" />
+                        </div>
                         <span className="font-medium text-white">{habit.name}</span>
                       </td>
                       {gridData.last7Days.map(d => {
