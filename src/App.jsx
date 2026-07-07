@@ -18,6 +18,8 @@ function App() {
   // Swipe gesture state
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchEndX, setTouchEndX] = useState(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Minimum distance in pixels to trigger a swipe
   const minSwipeDistance = 50;
@@ -25,25 +27,39 @@ function App() {
   const onTouchStart = (e) => {
     setTouchEndX(null); // Reset end position
     setTouchStartX(e.targetTouches[0].clientX);
+    setIsDragging(true);
   };
 
   const onTouchMove = (e) => {
-    setTouchEndX(e.targetTouches[0].clientX);
+    const currentX = e.targetTouches[0].clientX;
+    setTouchEndX(currentX);
+    
+    if (touchStartX) {
+      const offset = currentX - touchStartX;
+      // Prevent dragging past edges
+      if (currentView === 'home' && offset > 0) return;
+      if (currentView === 'dashboard' && offset < 0) return;
+      
+      setDragOffset(offset);
+    }
   };
 
   const onTouchEnd = () => {
-    if (!touchStartX || !touchEndX) return;
+    setIsDragging(false);
+    if (!touchStartX || !touchEndX) {
+      setDragOffset(0);
+      return;
+    }
     
     const distance = touchStartX - touchEndX;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
     
-    if (isLeftSwipe && currentView === 'home') {
+    if (distance > minSwipeDistance && currentView === 'home') {
       setCurrentView('dashboard');
-    }
-    if (isRightSwipe && currentView === 'dashboard') {
+    } else if (distance < -minSwipeDistance && currentView === 'dashboard') {
       setCurrentView('home');
     }
+    
+    setDragOffset(0);
   };
 
   useEffect(() => {
@@ -106,13 +122,25 @@ function App() {
               
               {/* View Routing */}
               <main 
-                className="mt-4 relative"
+                className="mt-4 relative overflow-hidden touch-pan-y"
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
               >
-                {currentView === 'home' && <HomeView user={user} />}
-                {currentView === 'dashboard' && <DashboardView user={user} />}
+                <div 
+                  className="flex w-[200%] h-full"
+                  style={{ 
+                    transform: `translateX(calc(${currentView === 'home' ? '0%' : '-50%'} + ${dragOffset}px))`,
+                    transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
+                  }}
+                >
+                  <div className="w-1/2 shrink-0">
+                    <HomeView user={user} />
+                  </div>
+                  <div className="w-1/2 shrink-0">
+                    <DashboardView user={user} />
+                  </div>
+                </div>
               </main>
             </>
           )}
