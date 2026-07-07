@@ -27,6 +27,11 @@ function App() {
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
+    // Ignore swipe if the user is touching a horizontally scrollable element
+    if (e.target.closest('.overflow-x-auto') || e.target.closest('.custom-scrollbar')) {
+      return;
+    }
+
     setTouchEndX(null); // Reset end position
     setTouchStartX(e.targetTouches[0].clientX);
     setTouchStartY(e.targetTouches[0].clientY);
