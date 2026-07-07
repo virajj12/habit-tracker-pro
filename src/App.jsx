@@ -17,9 +17,11 @@ function App() {
 
   // Swipe gesture state
   const [touchStartX, setTouchStartX] = useState(null);
+  const [touchStartY, setTouchStartY] = useState(null);
   const [touchEndX, setTouchEndX] = useState(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isVerticalScroll, setIsVerticalScroll] = useState(false);
 
   // Minimum distance in pixels to trigger a swipe
   const minSwipeDistance = 50;
@@ -27,25 +29,49 @@ function App() {
   const onTouchStart = (e) => {
     setTouchEndX(null); // Reset end position
     setTouchStartX(e.targetTouches[0].clientX);
-    setIsDragging(true);
+    setTouchStartY(e.targetTouches[0].clientY);
+    setIsVerticalScroll(false);
+    setIsDragging(false);
   };
 
   const onTouchMove = (e) => {
+    if (isVerticalScroll) return;
+
     const currentX = e.targetTouches[0].clientX;
-    setTouchEndX(currentX);
+    const currentY = e.targetTouches[0].clientY;
     
-    if (touchStartX) {
-      const offset = currentX - touchStartX;
-      // Prevent dragging past edges
-      if (currentView === 'home' && offset > 0) return;
-      if (currentView === 'dashboard' && offset < 0) return;
+    if (touchStartX !== null && touchStartY !== null) {
+      const deltaX = currentX - touchStartX;
+      const deltaY = currentY - touchStartY;
       
-      setDragOffset(offset);
+      // Determine swipe axis after a small movement threshold
+      if (!isDragging) {
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+          if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            setIsVerticalScroll(true);
+            return;
+          } else {
+            setIsDragging(true);
+          }
+        } else {
+          return; // Wait until they move enough to decide
+        }
+      }
+
+      setTouchEndX(currentX);
+
+      // Prevent dragging past edges
+      if (currentView === 'home' && deltaX > 0) return;
+      if (currentView === 'dashboard' && deltaX < 0) return;
+      
+      setDragOffset(deltaX);
     }
   };
 
   const onTouchEnd = () => {
     setIsDragging(false);
+    setIsVerticalScroll(false);
+    
     if (!touchStartX || !touchEndX) {
       setDragOffset(0);
       return;
@@ -60,6 +86,8 @@ function App() {
     }
     
     setDragOffset(0);
+    setTouchStartX(null);
+    setTouchStartY(null);
   };
 
   useEffect(() => {
