@@ -15,6 +15,37 @@ function App() {
   const [resetToken, setResetToken] = useState(null);
   const [appReady, setAppReady] = useState(false);
 
+  // Swipe gesture state
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+
+  // Minimum distance in pixels to trigger a swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEndX(null); // Reset end position
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    
+    const distance = touchStartX - touchEndX;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && currentView === 'home') {
+      setCurrentView('dashboard');
+    }
+    if (isRightSwipe && currentView === 'dashboard') {
+      setCurrentView('home');
+    }
+  };
+
   useEffect(() => {
     // Check for password reset token in URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -74,7 +105,12 @@ function App() {
               <Navbar currentView={currentView} setCurrentView={setCurrentView} onLogout={handleLogout} user={user} />
               
               {/* View Routing */}
-              <main className="mt-4 relative">
+              <main 
+                className="mt-4 relative"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
                 {currentView === 'home' && <HomeView user={user} />}
                 {currentView === 'dashboard' && <DashboardView user={user} />}
               </main>
