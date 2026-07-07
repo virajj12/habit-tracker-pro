@@ -7,7 +7,7 @@ import webpush from 'web-push';
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   try {
     webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT || 'mailto:admin@example.com',
+      process.env.VAPID_SUBJECT || 'mailto:vjvirajjain122005@gmail.com',
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
       process.env.VAPID_PRIVATE_KEY
     );
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
   try {
     await dbConnect();
-    
+
     // Calculate current time window
     const now = new Date();
     const currentMins = now.getHours() * 60 + now.getMinutes();
@@ -41,17 +41,17 @@ export default async function handler(req, res) {
     const currentDayStr = dayNames[now.getDay()];
 
     const users = await User.find({ pushSubscriptions: { $exists: true, $not: { $size: 0 } } });
-    
+
     let notificationsSent = 0;
 
     for (const user of users) {
       // Find active habits for this user
       const habits = await Habit.find({ userId: user._id, isVisible: { $ne: false } });
-      
+
       for (const habit of habits) {
         // Skip if it's a skip day
         if (habit.skipDays && habit.skipDays.includes(currentDayStr)) continue;
-        
+
         // Skip if it has no scheduled time
         if (!habit.scheduledTime || habit.scheduledTime.timeOption === 'any') continue;
 
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
           }
         }
       }
-      
+
       // Save user if subscriptions were modified
       await user.save();
     }
