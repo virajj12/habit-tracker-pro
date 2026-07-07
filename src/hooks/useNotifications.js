@@ -31,7 +31,7 @@ export default function useNotifications(habits) {
         
         // Use the environment variable, but ensure any accidental quotes are stripped
         let rawKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || import.meta.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BJThL_CcaZt7pAnPpHkRGQ4IDJXehD-H244faEvvHvV5drsIRS0npf8Qu1K2WnIV1TaNee1MFwQCUaXcvQffztg";
-        const publicVapidKey = rawKey.replace(/^["']|["']$/g, '');
+        const publicVapidKey = rawKey.replace(/^["']|["']$/g, '').trim();
         
         if (!subscription) {
           try {
@@ -42,10 +42,17 @@ export default function useNotifications(habits) {
           } catch (subscribeErr) {
             console.error('PushManager subscribe failed:', subscribeErr);
             if (subscribeErr.name === 'AbortError' || subscribeErr.message.includes('push service error')) {
-              console.warn('Unregistering service worker to clear corrupted push state. Please reload the page.');
+              console.warn('Unregistering service worker to clear corrupted push state.');
               await registration.unregister();
-              // Force a reload to get a fresh service worker and subscription attempt
-              window.location.reload();
+              
+              // Only reload once per session to prevent infinite reload loops in browsers
+              // that permanently block push services (like Brave)
+              if (!sessionStorage.getItem('push_reload_attempted')) {
+                sessionStorage.setItem('push_reload_attempted', 'true');
+                window.location.reload();
+              } else {
+                console.error('Push notifications are not supported or are blocked by this browser (e.g. Brave browser).');
+              }
             }
             return; // Stop execution
           }
