@@ -30,6 +30,9 @@ export default function Navbar({ currentView, setCurrentView, user, onLogout }) 
     if ("Notification" in window) {
       const perm = await Notification.requestPermission();
       setNotificationPerm(perm);
+      if (perm === 'granted') {
+        window.dispatchEvent(new Event('push_permission_granted'));
+      }
     }
   };
 

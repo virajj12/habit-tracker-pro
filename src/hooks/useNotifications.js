@@ -23,8 +23,7 @@ export default function useNotifications(habits) {
       }
       
       try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
+        if (!("Notification" in window) || Notification.permission !== 'granted') return;
 
         const registration = await navigator.serviceWorker.ready;
         let subscription = await registration.pushManager.getSubscription();
@@ -74,12 +73,14 @@ export default function useNotifications(habits) {
     
     setupPush();
 
-    // 2. Local exact-time notifications when app is open
-    if (!("Notification" in window) || Notification.permission !== "granted") {
-      return;
-    }
+    const handlePermissionGranted = () => {
+      setupPush();
+    };
+    window.addEventListener('push_permission_granted', handlePermissionGranted);
 
+    // 2. Local exact-time notifications when app is open
     const checkSchedules = () => {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
       const now = new Date();
       const currentMins = now.getHours() * 60 + now.getMinutes();
       const todayStr = now.toLocaleDateString('en-CA');
@@ -130,6 +131,9 @@ export default function useNotifications(habits) {
     const intervalId = setInterval(checkSchedules, 60000);
     checkSchedules();
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('push_permission_granted', handlePermissionGranted);
+    };
   }, [habits]);
 }
