@@ -13,7 +13,7 @@ const HabitLogSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['completed', 'skipped'],
+    enum: ['completed', 'skipped', 'skipped-token'],
     required: true,
   },
   dateString: {

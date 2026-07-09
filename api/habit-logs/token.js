@@ -33,18 +33,20 @@ export default async function handler(req, res) {
     // Instead of a dummy log, let's just find one of the user's habits to attach it to, or create a 'system' habit.
     // Easiest is to just fetch the user's oldest habit and attach it there.
     
-    const userHabits = await Habit.find({ userId }).limit(1);
+    const userHabits = await Habit.find({ userId });
     if (userHabits.length === 0) {
       return res.status(400).json({ success: false, message: 'No habits found to freeze' });
     }
 
-    const log = await HabitLog.findOneAndUpdate(
-      { userId, habitId: userHabits[0]._id, dateString },
-      { status: 'skipped-token', completionTime: Date.now() },
-      { new: true, upsert: true, runValidators: true }
-    );
+    const logs = await Promise.all(userHabits.map(habit => 
+      HabitLog.findOneAndUpdate(
+        { userId, habitId: habit._id, dateString },
+        { status: 'skipped-token', completionTime: Date.now() },
+        { new: true, upsert: true, runValidators: true }
+      )
+    ));
 
-    res.status(200).json({ success: true, data: log });
+    res.status(200).json({ success: true, data: logs });
 
   } catch (error) {
     console.error("Token error:", error);

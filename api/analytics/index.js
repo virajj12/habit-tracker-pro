@@ -39,14 +39,20 @@ export default async function handler(req, res) {
 
     // 3. Current Streak (Highest streak out of all individual tasks, ignoring their skip days)
     const habits = await Habit.find({ userId });
-    const completedLogs = await HabitLog.find({ userId, status: 'completed' });
+    const relevantLogs = await HabitLog.find({ userId, status: { $in: ['completed', 'skipped-token'] } });
     
-    // Group completed logs by habitId
+    // Group completed and frozen logs by habitId
     const logsByHabit = {};
-    for (const log of completedLogs) {
+    const frozenByHabit = {};
+    for (const log of relevantLogs) {
       const hId = log.habitId.toString();
-      if (!logsByHabit[hId]) logsByHabit[hId] = [];
-      logsByHabit[hId].push(log.dateString);
+      if (log.status === 'completed') {
+        if (!logsByHabit[hId]) logsByHabit[hId] = [];
+        logsByHabit[hId].push(log.dateString);
+      } else if (log.status === 'skipped-token') {
+        if (!frozenByHabit[hId]) frozenByHabit[hId] = [];
+        frozenByHabit[hId].push(log.dateString);
+      }
     }
     
     let currentStreak = 0;
@@ -57,8 +63,8 @@ export default async function handler(req, res) {
     for (const habit of habits) {
       const hId = habit._id.toString();
       const skipDays = habit.skipDays || [];
-      const datesCompleted = logsByHabit[hId] || [];
-      const datesCompletedSet = new Set(datesCompleted);
+      const datesCompletedSet = new Set(logsByHabit[hId] || []);
+      const datesFrozenSet = new Set(frozenByHabit[hId] || []);
       
       let habitStreak = 0;
       let expectedDate = new Date(today);
@@ -70,12 +76,14 @@ export default async function handler(req, res) {
         
         if (datesCompletedSet.has(dStr)) {
           habitStreak++;
+        } else if (datesFrozenSet.has(dStr)) {
+          // Day was frozen with a Rest Token, so don't break the streak
         } else if (skipDays.includes(dayName)) {
           // It's a skip day and not completed, so don't break the streak
         } else if (dStr === todayStr) {
           // Today is not completed and not a skip day. Allow streak to continue from yesterday.
         } else {
-          // Not completed, not a skip day, not today -> streak breaks
+          // Not completed, not frozen, not a skip day, not today -> streak breaks
           break;
         }
         
@@ -93,7 +101,7 @@ export default async function handler(req, res) {
       progressDate.setDate(progressDate.getDate() - i);
       const dStr = progressDate.toLocaleDateString('en-CA');
       
-      const completedOnDate = completedLogs.filter(log => log.dateString === dStr).length;
+      const completedOnDate = relevantLogs.filter(log => log.dateString === dStr && log.status === 'completed').length;
       weeklyProgress.push({
         date: progressDate.toLocaleDateString('en-US', { weekday: 'short' }),
         completed: completedOnDate
