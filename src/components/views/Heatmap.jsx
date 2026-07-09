@@ -247,13 +247,13 @@ export default function Heatmap({ user }) {
             <div className="flex gap-3">
               <button 
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 bg-surface-800 hover:bg-surface-700 rounded-lg text-gray-300 font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-surface-800 hover:bg-surface-700 active:scale-95 rounded-lg text-gray-300 font-medium transition-all"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleUseToken}
-                className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-lg font-bold transition-colors shadow-[0_0_15px_rgba(251,191,36,0.3)]"
+                className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-400 active:scale-95 text-amber-950 rounded-lg font-bold transition-all shadow-[0_0_15px_rgba(251,191,36,0.3)]"
               >
                 Use Token
               </button>

@@ -46,19 +46,21 @@ export default function Navbar({ currentView, setCurrentView, user, onLogout }) 
       </div>
 
       {/* Primary Navigation */}
-      <div className="flex items-center gap-4 md:gap-8 bg-surface-900/50 px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-white/5 backdrop-blur-sm order-3 w-full justify-center md:order-none md:w-auto md:justify-start">
-        <button
-          onClick={() => setCurrentView('home')}
-          className={`transition-colors text-sm md:text-base font-medium ${currentView === 'home' ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
-        >
-          Home
-        </button>
-        <button
-          onClick={() => setCurrentView('dashboard')}
-          className={`transition-colors text-sm md:text-base font-medium ${currentView === 'dashboard' ? 'text-secondary' : 'text-gray-400 hover:text-gray-200'}`}
-        >
-          Dashboard
-        </button>
+      <div className="order-3 w-full flex justify-center md:order-none md:w-auto md:justify-start">
+        <div className="flex items-center gap-4 md:gap-8 bg-surface-900/50 px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-white/5 backdrop-blur-sm">
+          <button
+            onClick={() => setCurrentView('home')}
+            className={`transition-colors text-sm md:text-base font-medium ${currentView === 'home' ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
+          >
+            Home
+          </button>
+          <button
+            onClick={() => setCurrentView('dashboard')}
+            className={`transition-colors text-sm md:text-base font-medium ${currentView === 'dashboard' ? 'text-secondary' : 'text-gray-400 hover:text-gray-200'}`}
+          >
+            Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Structural Space for Future Features (Profile, Settings, Premium) */}
