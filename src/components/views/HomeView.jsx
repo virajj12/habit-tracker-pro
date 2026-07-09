@@ -10,6 +10,7 @@ export default function HomeView({ user }) {
   const [xp, setXp] = useState(user?.xp || 0);
   const [level, setLevel] = useState(user?.level || 1);
   const [habits, setHabits] = useState([]);
+  const [showMobileNewTask, setShowMobileNewTask] = useState(false);
   
   // Start notification schedule watcher
   useNotifications(habits);
@@ -74,19 +75,30 @@ export default function HomeView({ user }) {
           </div>
         </div>
 
-        {/* Velocity Score */}
-        <div className="flex items-center gap-3 bg-surface-800/30 px-4 md:px-5 py-2 md:py-2.5 rounded-2xl border border-white/5 shadow-lg w-full md:w-auto">
-          <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
-            <svg className="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
-          <div>
-            <div className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-wider">Velocity</div>
-            <div className="text-base md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-blue-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]">
-              {momentumPercent}% Momentum
+        {/* Velocity Score & Mobile Toggle */}
+        <div className="flex w-full md:w-auto gap-3">
+          <div className="flex-1 md:flex-none flex items-center gap-3 bg-surface-800/30 px-4 md:px-5 py-2 md:py-2.5 rounded-2xl border border-white/5 shadow-lg">
+            <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
+              <svg className="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-wider">Velocity</div>
+              <div className="text-base md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-blue-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]">
+                {momentumPercent}% Momentum
+              </div>
             </div>
           </div>
+          <button 
+            onClick={() => setShowMobileNewTask(!showMobileNewTask)}
+            className="md:hidden flex items-center justify-center w-[52px] bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-2xl transition-all active:scale-95 shadow-lg shrink-0"
+            aria-label="Toggle new task form"
+          >
+            <svg className={`w-6 h-6 transition-transform duration-300 ${showMobileNewTask ? 'rotate-45' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -99,9 +111,12 @@ export default function HomeView({ user }) {
       </GlassCard>
 
       {/* New Task Form (Top Right, Spanning 2 rows) */}
-      <GlassCard className="lg:col-span-1 lg:row-span-2">
+      <GlassCard className={`lg:col-span-1 lg:row-span-2 ${showMobileNewTask ? 'block animate-in slide-in-from-top-4 fade-in duration-300' : 'hidden md:block'}`}>
         <h2 className="text-lg font-semibold mb-4">New Task</h2>
-        <NewTaskForm onTaskAdded={(newTask) => setHabits(prev => [newTask, ...prev])} />
+        <NewTaskForm onTaskAdded={(newTask) => {
+          setHabits(prev => [newTask, ...prev]);
+          setShowMobileNewTask(false); // Auto-close on mobile after adding
+        }} />
       </GlassCard>
 
       {/* Upcoming Tasks (Middle Left) */}
