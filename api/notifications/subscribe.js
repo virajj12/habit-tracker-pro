@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
-    const { subscription } = req.body;
+    const { subscription, timezoneOffset } = req.body;
     if (!subscription) {
       return res.status(400).json({ success: false, message: 'Missing subscription' });
     }
@@ -33,14 +33,20 @@ export default async function handler(req, res) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    // Update timezone offset if provided
+    if (typeof timezoneOffset === 'number') {
+      user.timezoneOffset = timezoneOffset;
+    }
+
     // Check if subscription already exists
     const subExists = user.pushSubscriptions && user.pushSubscriptions.some(sub => sub.endpoint === subscription.endpoint);
     
     if (!subExists) {
       if (!user.pushSubscriptions) user.pushSubscriptions = [];
       user.pushSubscriptions.push(subscription);
-      await user.save();
     }
+    
+    await user.save();
 
     res.status(200).json({ success: true, message: 'Subscribed successfully' });
   } catch (error) {

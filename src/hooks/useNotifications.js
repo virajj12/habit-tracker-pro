@@ -64,7 +64,10 @@ export default function useNotifications(habits) {
         await fetch('/api/notifications/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subscription })
+          body: JSON.stringify({ 
+            subscription,
+            timezoneOffset: new Date().getTimezoneOffset() 
+          })
         });
       } catch (err) {
         console.error('Failed to setup push notifications:', err);

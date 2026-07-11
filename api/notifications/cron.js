@@ -33,18 +33,25 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
-    // Calculate current time window
     const now = new Date();
-    const currentMins = now.getHours() * 60 + now.getMinutes();
-    const todayStr = now.toLocaleDateString('en-CA');
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const currentDayStr = dayNames[now.getDay()];
-
     const users = await User.find({ pushSubscriptions: { $exists: true, $not: { $size: 0 } } });
 
     let notificationsSent = 0;
 
     for (const user of users) {
+      const offsetMins = user.timezoneOffset || 0;
+      // JS getTimezoneOffset() is UTC - Local. So Local = UTC - offset.
+      const localTime = new Date(now.getTime() - offsetMins * 60000);
+      
+      const currentMins = localTime.getUTCHours() * 60 + localTime.getUTCMinutes();
+      const year = localTime.getUTCFullYear();
+      const month = String(localTime.getUTCMonth() + 1).padStart(2, '0');
+      const date = String(localTime.getUTCDate()).padStart(2, '0');
+      const todayStr = `${year}-${month}-${date}`;
+      
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const currentDayStr = dayNames[localTime.getUTCDay()];
+
       // Find active habits for this user
       const habits = await Habit.find({ userId: user._id, isVisible: { $ne: false } });
 
