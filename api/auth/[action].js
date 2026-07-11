@@ -50,6 +50,7 @@ async function handleLogin(req, res) {
   res.setHeader('Set-Cookie', serialized);
   const userObj = user.toObject();
   delete userObj.password;
+  userObj.token = token; // Add token for mobile app
   res.status(200).json(userObj);
 }
 
@@ -78,7 +79,12 @@ async function handleSignup(req, res) {
 async function handleMe(req, res) {
   if (req.method !== 'GET' && req.method !== 'PUT') return res.status(405).json({ message: 'Method Not Allowed' });
   const cookies = cookie.parseCookie(req.headers.cookie || '');
-  const token = cookies.auth_token;
+  let token = cookies.auth_token;
+
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
   if (!token) return res.status(401).json({ message: 'Not authenticated' });
   let decoded;
   try {
