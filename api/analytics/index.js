@@ -11,9 +11,12 @@ export default async function handler(req, res) {
 
   try {
     const cookies = cookie.parseCookie(req.headers.cookie || '');
-    const token = cookies.auth_token;
+    let token = cookies.auth_token;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
     if (!token) throw new Error('Not authenticated');
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_antigravity');
     const userId = decoded.userId;
 
@@ -26,9 +29,9 @@ export default async function handler(req, res) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toLocaleDateString('en-CA');
-    
-    const recentLogs = await HabitLog.find({ 
-      userId, 
+
+    const recentLogs = await HabitLog.find({
+      userId,
       dateString: { $gte: thirtyDaysAgoStr }
     });
 
@@ -37,71 +40,58 @@ export default async function handler(req, res) {
     // If no logs, rate is 0. If there are logs, it's completed / total logs.
     const completionRate = recentLogs.length > 0 ? Math.round((recentCompleted / recentLogs.length) * 100) : 0;
 
-    // 3. Current Streak (Highest streak out of all individual tasks, ignoring their skip days)
+    // 3. Current Streak (Global streak: consecutive days with at least one task completed)
     const habits = await Habit.find({ userId });
-    const relevantLogs = await HabitLog.find({ userId, status: { $in: ['completed', 'skipped-token'] } });
-    
-    // Group completed and frozen logs by habitId
-    const logsByHabit = {};
-    const frozenByHabit = {};
-    for (const log of relevantLogs) {
-      const hId = log.habitId.toString();
-      if (log.status === 'completed') {
-        if (!logsByHabit[hId]) logsByHabit[hId] = [];
-        logsByHabit[hId].push(log.dateString);
-      } else if (log.status === 'skipped-token') {
-        if (!frozenByHabit[hId]) frozenByHabit[hId] = [];
-        frozenByHabit[hId].push(log.dateString);
-      }
-    }
-    
-    let currentStreak = 0;
+    const completedLogs = await HabitLog.find({ userId, status: 'completed' });
+
+    const allCompletedDates = new Set(completedLogs.map(log => log.dateString));
+
     const today = new Date();
-    const todayStr = today.toLocaleDateString('en-CA');
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
-    for (const habit of habits) {
-      const hId = habit._id.toString();
-      const skipDays = habit.skipDays || [];
-      const datesCompletedSet = new Set(logsByHabit[hId] || []);
-      const datesFrozenSet = new Set(frozenByHabit[hId] || []);
-      
-      let habitStreak = 0;
-      let expectedDate = new Date(today);
-      
-      // Look back up to 5 years to find the streak
-      for (let i = 0; i < 1825; i++) {
-        const dStr = expectedDate.toLocaleDateString('en-CA');
-        const dayName = dayNames[expectedDate.getDay()];
-        
-        if (datesCompletedSet.has(dStr)) {
-          habitStreak++;
-        } else if (datesFrozenSet.has(dStr)) {
-          // Day was frozen with a Rest Token, so don't break the streak
-        } else if (skipDays.includes(dayName)) {
-          // It's a skip day and not completed, so don't break the streak
-        } else if (dStr === todayStr) {
-          // Today is not completed and not a skip day. Allow streak to continue from yesterday.
-        } else {
-          // Not completed, not frozen, not a skip day, not today -> streak breaks
-          break;
-        }
-        
-        expectedDate.setDate(expectedDate.getDate() - 1);
-      }
-      
-      if (habitStreak > currentStreak) {
-        currentStreak = habitStreak;
+    let maxDateStr = today.toISOString().split('T')[0];
+    for (const log of completedLogs) {
+      if (log.dateString > maxDateStr) {
+        maxDateStr = log.dateString;
       }
     }
+
+    const activeHabits = habits.filter(h => h.isVisible !== false);
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const isGlobalSkipDay = (dayName) => {
+      if (activeHabits.length === 0) return false;
+      return activeHabits.every(h => (h.skipDays || []).includes(dayName));
+    };
+
+    let currentStreak = 0;
+    // We use UTC parsing to cleanly subtract days without local timezone shifts
+    let expectedDate = new Date(maxDateStr + 'T00:00:00Z');
+
+    for (let i = 0; i < 1825; i++) {
+      const dStr = expectedDate.toISOString().split('T')[0];
+      const dayName = dayNames[expectedDate.getUTCDay()];
+
+      if (allCompletedDates.has(dStr)) {
+        currentStreak++;
+      } else if (isGlobalSkipDay(dayName)) {
+        // Global skip day -> doesn't increment streak, but doesn't break it
+      } else if (i === 0) {
+        // If the very first day we check (maxDateStr) is not completed, 
+        // it means maxDateStr is todayStr and it's not completed yet. Allow it.
+      } else {
+        break;
+      }
+
+      expectedDate.setUTCDate(expectedDate.getUTCDate() - 1);
+    }
+
     // 4. Weekly Progress
     const weeklyProgress = [];
     for (let i = 6; i >= 0; i--) {
       let progressDate = new Date();
       progressDate.setDate(progressDate.getDate() - i);
       const dStr = progressDate.toLocaleDateString('en-CA');
-      
-      const completedOnDate = relevantLogs.filter(log => log.dateString === dStr && log.status === 'completed').length;
+
+      const completedOnDate = completedLogs.filter(log => log.dateString === dStr).length;
       weeklyProgress.push({
         date: progressDate.toLocaleDateString('en-US', { weekday: 'short' }),
         completed: completedOnDate
