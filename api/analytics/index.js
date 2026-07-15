@@ -57,9 +57,23 @@ export default async function handler(req, res) {
     const activeHabits = habits.filter(h => h.isVisible !== false);
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    const isGlobalSkipDay = (dayName) => {
-      if (activeHabits.length === 0) return false;
-      return activeHabits.every(h => (h.skipDays || []).includes(dayName));
+    const isNoTaskDay = (dStr, dayName) => {
+      if (activeHabits.length === 0) return true;
+      return activeHabits.every(h => {
+        if ((h.skipDays || []).includes(dayName)) return true;
+        
+        const startDate = (h.dateRange && h.dateRange.startDate) ? new Date(h.dateRange.startDate) : new Date(h.createdAt);
+        const startStr = startDate.toISOString().split('T')[0];
+        if (dStr < startStr) return true;
+
+        if (h.dateRange && h.dateRange.endDate) {
+          const endDate = new Date(h.dateRange.endDate);
+          const endStr = endDate.toISOString().split('T')[0];
+          if (dStr > endStr) return true;
+        }
+
+        return false;
+      });
     };
 
     let currentStreak = 0;
@@ -72,8 +86,8 @@ export default async function handler(req, res) {
 
       if (allCompletedDates.has(dStr)) {
         currentStreak++;
-      } else if (isGlobalSkipDay(dayName)) {
-        // Global skip day -> doesn't increment streak, but doesn't break it
+      } else if (isNoTaskDay(dStr, dayName)) {
+        // No task on this day (skip day or before creation) -> doesn't increment streak, but doesn't break it
       } else if (i === 0) {
         // If the very first day we check (maxDateStr) is not completed, 
         // it means maxDateStr is todayStr and it's not completed yet. Allow it.
