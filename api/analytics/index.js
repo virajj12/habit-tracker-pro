@@ -57,18 +57,34 @@ export default async function handler(req, res) {
     const activeHabits = habits.filter(h => h.isVisible !== false);
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+    let earliestDateStr = null;
+    if (activeHabits.length > 0) {
+      const earliestDate = activeHabits.reduce((earliest, h) => {
+        const d = (h.dateRange && h.dateRange.startDate) ? new Date(h.dateRange.startDate) : new Date(h.createdAt);
+        return d < earliest ? d : earliest;
+      }, new Date());
+      // Apply a 1-day buffer to prevent timezone-related off-by-one errors (where local time is 1 day before UTC time)
+      const adjustedEarliest = new Date(earliestDate.getTime() - 24 * 60 * 60 * 1000);
+      earliestDateStr = adjustedEarliest.toISOString().split('T')[0];
+    } else {
+      // If no active habits, streak should just be 0 (no bridging)
+      earliestDateStr = today.toISOString().split('T')[0];
+    }
+
     const isNoTaskDay = (dStr, dayName) => {
       if (activeHabits.length === 0) return true;
       return activeHabits.every(h => {
         if ((h.skipDays || []).includes(dayName)) return true;
         
         const startDate = (h.dateRange && h.dateRange.startDate) ? new Date(h.dateRange.startDate) : new Date(h.createdAt);
-        const startStr = startDate.toISOString().split('T')[0];
+        const adjustedStartDate = new Date(startDate.getTime() - 24 * 60 * 60 * 1000); // 1-day buffer
+        const startStr = adjustedStartDate.toISOString().split('T')[0];
         if (dStr < startStr) return true;
 
         if (h.dateRange && h.dateRange.endDate) {
           const endDate = new Date(h.dateRange.endDate);
-          const endStr = endDate.toISOString().split('T')[0];
+          const adjustedEndDate = new Date(endDate.getTime() + 24 * 60 * 60 * 1000); // 1-day buffer
+          const endStr = adjustedEndDate.toISOString().split('T')[0];
           if (dStr > endStr) return true;
         }
 
@@ -88,6 +104,10 @@ export default async function handler(req, res) {
         currentStreak++;
       } else if (isNoTaskDay(dStr, dayName)) {
         // No task on this day (skip day or before creation) -> doesn't increment streak, but doesn't break it
+        // Prevent infinite bridging into the past by stopping before the oldest active habit started
+        if (earliestDateStr && dStr < earliestDateStr) {
+          break;
+        }
       } else if (i === 0) {
         // If the very first day we check (maxDateStr) is not completed, 
         // it means maxDateStr is todayStr and it's not completed yet. Allow it.
