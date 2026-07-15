@@ -43,8 +43,10 @@ export default async function handler(req, res) {
     // 3. Current Streak (Global streak: consecutive days with at least one task completed)
     const habits = await Habit.find({ userId });
     const completedLogs = await HabitLog.find({ userId, status: 'completed' });
+    const frozenLogs = await HabitLog.find({ userId, status: 'skipped-token' });
 
     const allCompletedDates = new Set(completedLogs.map(log => log.dateString));
+    const allFrozenDates = new Set(frozenLogs.map(log => log.dateString));
 
     const today = new Date();
     let maxDateStr = today.toISOString().split('T')[0];
@@ -102,8 +104,8 @@ export default async function handler(req, res) {
 
       if (allCompletedDates.has(dStr)) {
         currentStreak++;
-      } else if (isNoTaskDay(dStr, dayName)) {
-        // No task on this day (skip day or before creation) -> doesn't increment streak, but doesn't break it
+      } else if (allFrozenDates.has(dStr) || isNoTaskDay(dStr, dayName)) {
+        // Frozen day or no task on this day (skip day or before creation) -> doesn't increment streak, but doesn't break it
         // Prevent infinite bridging into the past by stopping before the oldest active habit started
         if (earliestDateStr && dStr < earliestDateStr) {
           break;
